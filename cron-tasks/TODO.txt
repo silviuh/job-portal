@@ -1,0 +1,4 @@
+- find why ejobs is bugging
+- find why RangeError [ERR_CHILD_PROCESS_STDIO_MAXBUFFER]: stdout maxBuffer length exceeded
+- find a way to use spawn instead of exec
+- find a way to store job data in mongodb instead of filesystem

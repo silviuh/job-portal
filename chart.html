@@ -1,0 +1,31 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['table']});
+      google.charts.setOnLoadCallback(drawTable);
+
+
+      function drawTable() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', '');
+        data.addColumn('boolean', 'Same level');
+        data.addColumn('boolean', 'One level above current position');
+        data.addColumn('boolean', 'Two levels above current position');
+        data.addRows([
+          ['Outstanding',  false, true, false],
+          ['Exceptional',  false, false, false],
+          ['Accomplished',   false, false, false],
+          ['Below Ambition', false, false, false],
+        ]);
+
+        var table = new google.visualization.Table(document.getElementById('table_div'));
+
+        table.draw(data, {showRowNumber: false, width: '100%', height: '100%'});
+      }
+    </script>
+  </head>
+  <body>
+    <div id="table_div"></div>
+  </body>
+</html>
