@@ -2,9 +2,12 @@
 // const cheerio = require("cheerio");
 // const express = require("express");
 // const fs = require("fs");
-import axios from 'axios';
-import cheerio from 'cheerio';
-import fs from 'fs';
+import axios from "axios";
+import cheerio from "cheerio";
+import fs from "fs";
+import db from "../../mongoDB/database.js";
+import mongoose from "mongoose";
+import jobModel from "../../mongoDB/schemas/job-schema.js";
 
 // const url = "https://www.ejobs.ro/locuri-de-munca";
 const pageUrl = "pagina";
@@ -13,7 +16,7 @@ let theLastPage = false;
 async function scrapeData() {
   const url = "https://www.hipo.ro/locuri-de-munca/cautajob";
 
-  await axios(url).then((response) => {
+  await axios(url).then(async (response) => {
     const html_data = response.data;
     const $ = cheerio.load(html_data);
     let selectedElem = $(".page-last").attr("href").trim();
@@ -21,7 +24,7 @@ async function scrapeData() {
     const numberOfElements = parseInt(selectedElem);
 
     for (let i = 1; i < numberOfElements; i++) {
-      scrapePage(i);
+      await scrapePage(i);
     }
   });
 }
@@ -37,7 +40,7 @@ async function scrapePage(pageNumber) {
 
   //tbl-hipo tbl-results
   await axios(url)
-    .then((response) => {
+    .then(async (response) => {
       const html_data = response.data;
       const $ = cheerio.load(html_data);
       const baseURL = "https://www.hipo.ro/";
@@ -60,36 +63,55 @@ async function scrapePage(pageNumber) {
           baseURL +
           $(parentElem).find(".cell-info").children(".job-title").attr("href");
 
-        if (jobUrl !== undefined) jobUrl = jobUrl.trim();
+        jobUrl = jobUrl.trim();
         // const jobDescription = $(el).fcleind(".JCContentMiddle__Info--Darker > a")[0].text() // TODO
         const jobDate = $(parentElem).find(".cell-date > span").text().trim();
 
-        const job = JSON.stringify({
-          jobName: jobName,
-          jobEmployer: jobEmployer,
-          jobLocation: jobLocation,
-          jobDate: jobDate,
-          jobUrl: jobUrl,
-        });
+        if (
+          !jobUrl.includes("undefined") &&
+          jobLocation != "" &&
+          jobName != "" &&
+          jobEmployer != "" &&
+          jobDate != "" &&
+          jobUrl != ""
+        ) {
+          const job = {
+            jobName: jobName,
+            jobEmployer: jobEmployer, // numele angajatorului am nev de el, as avea nev de el aici, dar tre sa fac un request in plus
+            jobLocation: jobLocation,
+            jobDate: jobDate,
+            jobUrl: jobUrl,
+            jobDescription: "",
+            jobPageNumber: pageNumber,
+          };
 
-        const jobNumber = parentIndex * pageNumber;
-        // console.log(`${jobNumber} ${job}`);
-        jobs.push(job);
+          const jobNumber = parentIndex * pageNumber;
+          // console.log(`${jobNumber} ${job}`);
+          jobs.push(job);
+        }
         // console.log(`[${jobNumber}]:  ${job}`);
       });
 
       // console.log(jobs);
-      fs.appendFile(
-        "/Users/silviuh1/workspace/dev/facultate/licenta/training/cron-tasks/jobs/hipo-jobs-listed.json",
-        JSON.stringify(jobs, null, 2),
-        (err) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          // console.log("Successfully written data to file");
-        }
-      );
+      // fs.appendFile(
+      //   "/Users/silviuh1/workspace/dev/facultate/licenta/training/cron-tasks/jobs/hipo-jobs-listed.json",
+      //   JSON.stringify(jobs, null, 2),
+      //   (err) => {
+      //     if (err) {
+      //       console.error(err);
+      //       return;
+      //     }
+      //     // console.log("Successfully written data to file");
+      //   }
+      // );
+      await jobModel
+        .insertMany(jobs)
+        .then((doc) => {
+          // console.log(doc);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
 
       return jobs;
     })
@@ -117,4 +139,16 @@ async function scrapePage(pageNumber) {
   );
 */
 
-scrapeData();
+const connectToMongoDBandScrape = async () => {
+  await db().then(async (mongoose) => {
+    try {
+      console.log("Connected to mongodb!");
+      await scrapeData();
+    } finally {
+      console.log("Connection closed");
+      mongoose.connection.close();
+    }
+  });
+};
+
+connectToMongoDBandScrape();

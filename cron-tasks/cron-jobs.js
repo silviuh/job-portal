@@ -8,6 +8,8 @@ import {
   EVERY_MINUTE,
   EVERY_30_MINUTES,
   EVERY_HOUR,
+  EVERY_12_HOUR,
+  EVERY_DAY,
 } from "../cron-tasks/jobsScheduleConstants.js";
 
 function getExtension(filename) {
@@ -15,12 +17,12 @@ function getExtension(filename) {
   return ext[ext.length - 1];
 }
 
-const runTasks = () => {
-  const relativeJobsDirPath = "/jobs";
-  const __dirname = path.resolve();
-  const directoryPath = path.join(__dirname, "jobs");
-
-  // console.log(directoryPath);
+export default () => {
+  const relativeJobsDirPath = "/cron-tasks/jobs";
+  let __dirname = path.resolve(path.dirname(""));
+  __dirname = __dirname.substring(0, __dirname.lastIndexOf("/"));
+  const directoryPath = path.join(__dirname, relativeJobsDirPath);
+  //const directoryPath = "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/cron-tasks/jobs";
 
   fs.readdir(directoryPath, function (err, files) {
     if (err) {
@@ -32,7 +34,7 @@ const runTasks = () => {
         cron.schedule(EVERY_30_SECONDS, () => {
           const filePath = directoryPath + "/" + fileName;
           console.log(`[JOB RUN ON] {${filePath}}`);
-          // console.log(`relativeDirPath : ${relativeJobsDirPath} directoryPath: ${directoryPath} fileName : ${fileName} filePath: ${filePath}`);
+
           exec(
             `node ${filePath}`,
             { maxBuffer: 1024 * 1024 },
@@ -41,25 +43,11 @@ const runTasks = () => {
                 console.log(err);
                 return;
               }
-              // console.log(fileName);
-              // console.log(`stdout: ${stdout}`);
-              // console.log(`stderr: ${stderr}`);
+
+              console.log(`stdout: ${stdout}`);
+              console.log(`stderr: ${stderr}`);
             }
           );
-
-          /*
-          const scrapperProcess = process.spawn(filePath);
-
-          scrapperProcess.stdout.on("data", function (data) {
-            console.log("stdout: " + data);
-          });
-          scrapperProcess.stderr.on("data", function (data) {
-            console.log("stderr: " + data);
-          });
-          scrapperProcess.on("close", function (code) {
-            console.log("scrapperProcess exited with code " + code);
-          });
-          */
         });
 
         // console.log(file);
@@ -69,4 +57,4 @@ const runTasks = () => {
   });
 };
 
-runTasks();
+// runTasks();

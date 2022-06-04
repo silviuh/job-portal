@@ -5,6 +5,9 @@
 import axios from "axios";
 import cheerio from "cheerio";
 import fs from "fs";
+import db from "../../mongoDB/database.js";
+import mongoose from "mongoose";
+import jobModel from "../../mongoDB/schemas/job-schema.js";
 
 // URL of the page we want to scrape
 const url = "https://www.ejobs.ro/locuri-de-munca";
@@ -33,7 +36,7 @@ async function scrapeData(pageCount) {
   // console.log(currentPageFullUrl);
 
   await axios(currentPageFullUrl)
-    .then((response) => {
+    .then(async (response) => {
       const data = response.data;
       const $ = cheerio.load(data);
       const listItems = $(".JobList__List li");
@@ -90,33 +93,56 @@ async function scrapeData(pageCount) {
         // const jobDescription = $(el).find(".JCContentMiddle__Info--Darker > a")[0].text() // TODO
         const jobDate = $(el).find(".JCContentTop__Date").text().trim();
 
-        const job = JSON.stringify({
+        const job = {
           jobName: jobName,
-          jobEmployer: jobEmployer,
+          jobEmployer: "", // numele angajatorului am nev de el, as avea nev de el aici, dar tre sa fac un request in plus
           jobLocation: jobLocation,
           jobDate: jobDate,
           jobUrl: jobUrl,
-        });
-
+          jobDescription: "",
+          jobPageNumber: pageCount,
+        };
         jobs.push(job);
 
-        fs.appendFile(
-          "/Users/silviuh1/workspace/dev/facultate/licenta/training/cron-tasks/jobs/ejobs-jobs-listed.json",
-          JSON.stringify(jobs, null, 2),
-          (err) => {
-            if (err) {
-              console.error(err);
-              return;
-            }
-            // console.log("Successfully written data to file");
-          }
-        );
+        // fs.appendFile(
+        //   "/Users/silviuh1/workspace/dev/facultate/licenta/training/cron-tasks/jobs/ejobs-jobs-listed.json",
+        //   JSON.stringify(jobs, null, 2),
+        //   (err) => {
+        //     if (err) {
+        //       console.error(err);
+        //       return;
+        //     }
+        //     // console.log("Successfully written data to file");
+        //   }
+        // );
       });
+
+      await jobModel
+        .insertMany(jobs)
+        .then((doc) => {
+          // console.log(doc);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+
+      return jobs;
     })
     .catch((error) => {
       console.error(error);
     });
 }
 
-// scrapeFirstPageData();
-for (let i = 0; i < 10; i++ && theLastPage == false) scrapeData(i);
+const connectToMongoDBandScrape = async () => {
+  await db().then(async (mongoose) => {
+    try {
+      console.log("Connected to mongodb!");
+      for (let i = 0; i < 15; i++ && theLastPage == false) await scrapeData(i);
+    } finally {
+      console.log("Connection closed");
+      mongoose.connection.close();
+    }
+  });
+};
+
+connectToMongoDBandScrape();
