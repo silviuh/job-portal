@@ -1,23 +1,26 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import keys from "../../config/keys";
-import validateRegisterInput from "../validation/register";
-import validateLoginInput from "../validation/login";
-import User from "../../mongoDB/schemas/User";
+import keys from "../../config/keys.js";
+import validateRegisterInput from "../validation/register.js";
+import validateLoginInput from "../validation/login.js";
+import User from "../../mongoDB/schemas/User.js";
+import db from "../../mongoDB/database.js";
 
 const router = express.Router();
 
 // @route POST api/users/register
 // @desc Register user
 // @access Public
-router.post("/register", (req, res) => {
+router.post("/register", async (req, res) => {
   const { errors, isValid } = validateRegisterInput(req.body);
   if (!isValid) {
     return res.status(400).json(errors);
   }
 
-  User.findOne({ email: req.body.email }).then((user) => {
+  await User.findOne({ email: req.body.email }).then(async (user) => {
+    console.log("GETS HERE");
+
     if (user) {
       return res.status(400).json({ email: "Email already exists" });
     } else {
@@ -26,12 +29,16 @@ router.post("/register", (req, res) => {
         email: req.body.email,
         password: req.body.password,
       });
-      // Hash password before saving in database
-      bcrypt.genSalt(10, (err, salt) => {
-        bcrypt.hash(newUser.password, salt, (err, hash) => {
+
+      bcrypt.genSalt(10, async (_err, salt) => {
+        console.log("GETS HERE 3");
+
+        bcrypt.hash(newUser.password, salt, async (err, hash) => {
+          console.log("GETS HERE 4");
+
           if (err) throw err;
           newUser.password = hash;
-          newUser
+          await newUser
             .save()
             .then((user) => res.json(user))
             .catch((err) => console.log(err));
@@ -44,7 +51,7 @@ router.post("/register", (req, res) => {
 // @route POST api/users/login
 // @desc Login user and return JWT token
 // @access Public
-router.post("/login", (req, res) => {
+router.post("/login", async (req, res) => {
   // Form validation
   const { errors, isValid } = validateLoginInput(req.body);
   // Check validation
@@ -54,13 +61,14 @@ router.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   // Find user by email
-  User.findOne({ email }).then((user) => {
+
+  await User.findOne({ email }).then(async (user) => {
     // Check if user exists
     if (!user) {
       return res.status(404).json({ emailnotfound: "Email not found" });
     }
     // Check password
-    bcrypt.compare(password, user.password).then((isMatch) => {
+    bcrypt.compare(password, user.password).then(async (isMatch) => {
       if (isMatch) {
         // User matched
         // Create JWT Payload
@@ -91,4 +99,4 @@ router.post("/login", (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;

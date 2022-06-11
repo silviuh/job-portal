@@ -1,7 +1,7 @@
-import validator from "validator";
+import Validator from "validator";
 import isEmpty from "is-empty";
 
-module.exports = function validateLoginInput(data) {
+export default function validateLoginInput(data) {
   let errors = {};
   // Convert empty fields to an empty string so we can use validator functions
   data.email = !isEmpty(data.email) ? data.email : "";

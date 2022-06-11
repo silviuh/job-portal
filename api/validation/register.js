@@ -1,7 +1,7 @@
-import validator from "validator";
+import Validator from "validator";
 import isEmpty from "is-empty";
 
-module.exports = function validateRegisterInput(data) {
+export default function validateRegisterInput(data) {
   let errors = {};
   // Convert empty fields to an empty string so we can use validator functions
   data.name = !isEmpty(data.name) ? data.name : "";

@@ -1,0 +1,8 @@
+
+  // db().then(async (mongoose) => {
+  //   try {
+  //     console.log(`Connected to [job_portal] DB.`);
+    // } finally {
+  //   console.log("Connection closed");
+  //   mongoose.connection.close();
+  // }
