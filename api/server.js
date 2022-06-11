@@ -2,15 +2,35 @@ import express, { response } from "express";
 import runJobs from "../cron-tasks/cron-jobs.js";
 import jobsModel from "../mongoDB/schemas/job-schema.js";
 import db from "../mongoDB/database.js";
+import passport from "passport";
+import users from "./routes/users.js";
+import passportConfing from "../config/passport.js";
+
 const app = express();
 const router = express.Router();
-const port = 3000;
-
+const port = 8080 || process.env.PORT;
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
   const offset = page ? page * limit : 0;
   return { limit, offset };
 };
+
+app.use(
+  bodyParser.urlencoded({
+    extended: false,
+  })
+);
+app.use(bodyParser.json());
+app.use(passport.initialize());
+app.use("/api", router);
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
+
+passportConfing(passport);
+
+
+
 
 router.get("/start-jobs", (req, res) => {
   runJobs();
@@ -56,10 +76,4 @@ router.get("/get-jobs", (req, res) => {
       mongoose.connection.close();
     }
   });
-});
-
-app.use("/api", router);
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
 });
