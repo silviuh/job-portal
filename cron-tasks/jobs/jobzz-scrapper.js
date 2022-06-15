@@ -23,7 +23,7 @@ async function scrapeData() {
     const numberOfElements = parseInt(selectedElem);
 
     for (let i = 1; i < numberOfElements; i++) {
-      await delay(5000);
+      await delay(1000);
       await scrapePage(i);
       console.log("Scrapping...");
     }
