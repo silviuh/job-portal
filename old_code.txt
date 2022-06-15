@@ -1,8 +1,2 @@
-
-  // db().then(async (mongoose) => {
-  //   try {
-  //     console.log(`Connected to [job_portal] DB.`);
-    // } finally {
-  //   console.log("Connection closed");
-  //   mongoose.connection.close();
-  // }
+1.job employer not shown in job
+2.cuvant de interes:  class="WysiwygSection"

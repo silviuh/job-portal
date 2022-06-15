@@ -11,6 +11,7 @@ import jobModel from "../../mongoDB/schemas/job-schema.js";
 const searchUrl = "https://jobzz.ro/locuri-de-munca-in-romania";
 const prefix = ".html";
 let theLastPage = false;
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 async function scrapeData() {
   const url = searchUrl + prefix;
@@ -22,7 +23,9 @@ async function scrapeData() {
     const numberOfElements = parseInt(selectedElem);
 
     for (let i = 1; i < numberOfElements; i++) {
-      await scrapePage(i); // punand await pe pagina vom avea cod sincron, neputand parsa mai multe paginin in acelasi timp
+      await delay(5000);
+      await scrapePage(i);
+      console.log("Scrapping...");
     }
   });
 }
@@ -78,7 +81,7 @@ async function scrapePage(pageNumber) {
           jobDate: jobDate,
           jobUrl: jobUrl,
           jobDescription: jobDescription,
-          jobPageNumber: pageNumber
+          jobPageNumber: pageNumber,
         };
 
         const jobNumber = parentIndex * pageNumber;

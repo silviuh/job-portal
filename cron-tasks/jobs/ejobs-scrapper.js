@@ -1,7 +1,3 @@
-// const axios = require("axios");
-// const cheerio = require("cheerio");
-// const fs = require("fs");
-
 import axios from "axios";
 import cheerio from "cheerio";
 import fs from "fs";
@@ -9,7 +5,6 @@ import db from "../../mongoDB/database.js";
 import mongoose from "mongoose";
 import jobModel from "../../mongoDB/schemas/job-schema.js";
 
-// URL of the page we want to scrape
 const url = "https://www.ejobs.ro/locuri-de-munca";
 const pageUrl = "pagina";
 let theLastPage = false;
@@ -17,13 +12,9 @@ let theLastPage = false;
 let firstPageData = "";
 let firstPageHtml = "";
 
-/*
-async function scrapeFirstPageData() {
-  firstPageData = await axios.get(url);
-  firstPageHtml = cheerio.load(firstPageData);
-  console.log(firstPageHtml.html());
-}
-*/
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const pagesNumber = 100;
+const delayBetweenPageRequests = 2_000;
 
 async function scrapeData(pageCount) {
   let currentPageFullUrl = "";
@@ -33,116 +24,140 @@ async function scrapeData(pageCount) {
     currentPageFullUrl = url + "/" + pageUrl + pageCount;
   }
 
-  // console.log(currentPageFullUrl);
-
   await axios(currentPageFullUrl)
     .then(async (response) => {
       const data = response.data;
       const $ = cheerio.load(data);
       const listItems = $(".JobList__List li");
       const baseURL = "https://www.ejobs.ro";
-      const nextButtonElement = $().find("JLPButton--Next"); // this has a href with the url
+      const nextButtonElement = $().find("JLPButton--Next");
       const jobs = [];
       $.prototype.exists = function (selector) {
         return this.find(selector).length > 0;
       };
 
-      /*
-      const firstPageUrl = url;
-      let nextPage Url2 = '';
-      const nextPageAnchorElement = $(".JobListPaginator").children("a");
-
-      const nextPageUrl = baseURL + nextPageAnchorElement.attr("href").trim();
-      nextPageUrl2 = baseURL + nextButtonElement.attr("href").trim()
-
-      console.log(nextPageAnchorElement.children());
-      console.log(firstPageUrl);
-      console.log(nextPageUrl);
-
-      console.log(firstPageHtml.html());
-      console.log($().html());
-      */
-
-      // console.log("[nexbutton: " + nextButtonElement.attr("href"));
-
-      // if (nextButtonElement.attr("href") === "undefined") {
       if (nextButtonElement.exists()) {
-        // ultima pagina nu mai are butonul de pagina urmatoare
         console.log("intra aici");
         theLastPage = true;
         return;
       }
 
-      listItems.each((idx, el) => {
-        const jobName = $(el)
-          .find(".JCContentMiddle__Title > a > span")
-          .text()
-          .trim();
-        const jobEmployer = $(el)
-          .find(".JCContentMiddle__Info--Darker > a")
-          .text()
-          .trim();
-        const jobLocation = $(el)
-          .find(".JCContentMiddle")
-          .children("span")
-          .text()
-          .trim();
-        const jobUrl =
-          baseURL +
-          $(el).find(".JCContentMiddle__Title > a").attr("href").trim();
-        // const jobDescription = $(el).find(".JCContentMiddle__Info--Darker > a")[0].text() // TODO
-        const jobDate = $(el).find(".JCContentTop__Date").text().trim();
+      listItems
+        .each(async (idx, el) => {
+          const jobName = $(el)
+            .find(".JCContentMiddle__Title > a > span")
+            .text()
+            .trim();
+          const jobEmployer = $(el)
+            .find(".JCContentMiddle__Info--Darker > a")
+            .text()
+            .trim();
+          const jobLocation = $(el)
+            .find(".JCContentMiddle")
+            .children("span")
+            .text()
+            .trim();
+          const jobUrl =
+            baseURL +
+            $(el).find(".JCContentMiddle__Title > a").attr("href").trim();
+          const jobDate = $(el).find(".JCContentTop__Date").text().trim();
+          let jobDescription = "";
 
-        const job = {
-          jobName: jobName,
-          jobEmployer: "", // numele angajatorului am nev de el, as avea nev de el aici, dar tre sa fac un request in plus
-          jobLocation: jobLocation,
-          jobDate: jobDate,
-          jobUrl: jobUrl,
-          jobDescription: "",
-          jobPageNumber: pageCount,
-        };
-        jobs.push(job);
+          await axios(jobUrl)
+            .then(async (response) => {
+              const data = response.data;
+              const $ = cheerio.load(data);
+              const descriptionTitle = $(".JMDContent__Title");
+              jobDescription = "\r\n" + descriptionTitle.next().text() + "/n";
+            })
+            .catch((error) => {
+              console.error(error.message);
+            });
 
-        // fs.appendFile(
-        //   "/Users/silviuh1/workspace/dev/facultate/licenta/training/cron-tasks/jobs/ejobs-jobs-listed.json",
-        //   JSON.stringify(jobs, null, 2),
-        //   (err) => {
-        //     if (err) {
-        //       console.error(err);
-        //       return;
-        //     }
-        //     // console.log("Successfully written data to file");
-        //   }
-        // );
-      });
+          const job = {
+            jobName: jobName,
+            jobEmployer: jobEmployer, // numele angajatorului am nev de el, as avea nev de el aici, dar tre sa fac un request in plus
+            jobLocation: jobLocation,
+            jobDate: jobDate,
+            jobUrl: jobUrl,
+            jobDescription: jobDescription,
+            jobPageNumber: pageCount,
+          };
 
-      await jobModel
-        .insertMany(jobs)
-        .then((doc) => {
-          // console.log(doc);
+          jobs.push(job);
+
+          await jobModel
+            .insertOne(job)
+            .then((doc) => {
+              console.log(doc);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+
+          fs.appendFile(
+            "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/cron-tasks/jobs/ejobs-jobs-listed.json",
+            JSON.stringify(jobs, null, 2),
+            (err) => {
+              if (err) {
+                // console.error(err.message);
+                return;
+              }
+            }
+          );
         })
-        .catch((err) => {
-          console.log(err);
+        .catch((error) => {
+          console.error(error.message);
         });
+
+      console.log("GETS HERE");
+
+      // fs.appendFile(
+      //   "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/cron-tasks/jobs/ejobs-jobs-listed.json",
+      //   JSON.stringify(jobs, null, 2),
+      //   (err) => {
+      //     if (err) {
+      //       console.error(err.message);
+      //     }
+      //   }
+      // );
+
+      // await jobModel
+      //   .insertMany(jobs)
+      //   .then((doc) => {
+      //     console.log(doc);
+      //   })
+      //   .catch((err) => {
+      //     console.log(err);
+      //   });
 
       return jobs;
     })
     .catch((error) => {
-      console.error(error);
+      console.log("GETS HERE 2");
+      console.error(error.message);
     });
 }
 
 const connectToMongoDBandScrape = async () => {
-  await db().then(async (mongoose) => {
-    try {
-      console.log("Connected to mongodb!");
-      for (let i = 0; i < 15; i++ && theLastPage == false) await scrapeData(i);
-    } finally {
-      console.log("Connection closed");
-      mongoose.connection.close();
-    }
-  });
+  await db()
+    .then(async (mongoose) => {
+      try {
+        console.log("Connected tÏo mongodb!");
+        for (let i = 0; i < pagesNumber; i++ && theLastPage == false) {
+          await scrapeData(i).catch((error) => {
+            console.error(error.message);
+          });
+          await delay(delayBetweenPageRequests);
+        }
+      } finally {
+        console.log("Connection closed");
+        mongoose.connection.close();
+      }
+    })
+    .catch((error) => {
+      console.error(error.message);
+    });
 };
 
 connectToMongoDBandScrape();
