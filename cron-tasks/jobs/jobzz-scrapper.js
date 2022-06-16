@@ -11,7 +11,7 @@ import jobModel from "../../mongoDB/schemas/job-schema.js";
 const searchUrl = "https://jobzz.ro/locuri-de-munca-in-romania";
 const prefix = ".html";
 let theLastPage = false;
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function scrapeData() {
   const url = searchUrl + prefix;
@@ -23,16 +23,15 @@ async function scrapeData() {
     const numberOfElements = parseInt(selectedElem);
 
     for (let i = 1; i < numberOfElements; i++) {
-      await delay(1000);
       await scrapePage(i);
-      console.log("Scrapping...");
+      console.log(`Scrapping...[${i}]`);
     }
   });
 }
 
 async function scrapePage(pageNumber) {
   let url = "";
-  const jobs = [];
+  let jobs = [];
 
   if (pageNumber !== 1) url = searchUrl + "_" + pageNumber + prefix;
   else url = searchUrl + prefix;
@@ -43,29 +42,20 @@ async function scrapePage(pageNumber) {
       const $ = cheerio.load(html_data);
       const selectedElem = $("#list_cart_holder").find("a");
 
-      // console.log(selectedElem.text());
-      $(selectedElem).each((parentIndex, parentElem) => {
+      $(selectedElem).each(async (parentIndex, parentElem) => {
+        let jobEmployer = "";
         const jobName = $(parentElem).find(".title").text().trim();
-        /*
-        const jobEmployer = $(parentElem)
-          .find(".cell-company > a > span")
-          .text()
-          .trim();
-        */
         const jobLocation = $(parentElem)
           .find(".location_area")
           .children(".location")
           .text()
           .trim();
 
-        const jobDescription = $(parentElem)
-          .find(".info_details")
-          .text()
-          .trim();
+        let jobDescription = $(parentElem).find(".info_details").text().trim();
 
         let jobUrl = "";
         if ($(parentElem).attr("href") !== undefined)
-          jobUrl = $(parentElem).attr("href").trim();
+          jobUrl = $(parentElem).attr("href");
 
         const jobDate = $(parentElem)
           .find(".location_area")
@@ -73,10 +63,20 @@ async function scrapePage(pageNumber) {
           .text()
           .trim();
 
-        //JSON.stringify({
+        await axios(jobUrl)
+          .then(async (response) => {
+            const data = response.data;
+            const $ = cheerio.load(data);
+            jobDescription = $("#description").children("#paragraph").text();
+            jobEmployer = $(".account_right").children("h2").text();
+          })
+          .catch((error) => {
+            console.error(error.message);
+          });
+
         const job = {
           jobName: jobName,
-          jobEmployer: "", // numele angajatorului am nev de el, as avea nev de el aici, dar tre sa fac un request in plus
+          jobEmployer: jobEmployer,
           jobLocation: jobLocation,
           jobDate: jobDate,
           jobUrl: jobUrl,
@@ -86,30 +86,21 @@ async function scrapePage(pageNumber) {
 
         const jobNumber = parentIndex * pageNumber;
         jobs.push(job);
-        // console.log(`[${jobNumber}]:  ${job}`);
+        let jobInstance = new jobModel(job);
+
+        jobInstance.save(function (err, book) {
+          if (err) return console.error(err);
+        });
       });
 
-      // console.log(jobs);
-      // fs.appendFile(
-      //   "/Users/silviuh1/workspace/dev/facultate/licenta/training/cron-tasks/jobs/jobzz-jobs-listed.json",
-      //   JSON.stringify(jobs, null, 2),
-      //   (err) => {
-      //     if (err) {
-      //       console.error(err);
-      //       return;
-      //     }
-      //      console.log("Successfully written data to file");
-      //   }
-      // );
-
-      await jobModel
-        .insertMany(jobs)
-        .then((doc) => {
-          // console.log(doc);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      // await jobModel
+      //   .insertMany(jobs)
+      //   .then((doc) => {
+      //     // console.log(doc);
+      //   })
+      //   .catch((err) => {
+      //     console.log(err);
+      //   });
 
       return jobs;
     })
@@ -117,25 +108,6 @@ async function scrapePage(pageNumber) {
       console.error(error);
     });
 }
-
-/*
-  app.get("/api/jobs", async (req, res) => {
-    try {
-      const crypto = await scrapeData();
-      return res.status(200).json({
-        result: crypto,
-      });
-    } catch (err) {
-      return res.status(500).json({
-        err: err.toString(),
-      });
-    }
-  });
-  
-  app.listen(PORT, () =>
-    console.log(`The server is active and running on port ${PORT}`)
-  );
-*/
 
 const connectToMongoDBandScrape = async () => {
   await db().then(async (mongoose) => {

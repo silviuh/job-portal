@@ -14,7 +14,8 @@ let firstPageHtml = "";
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const pagesNumber = 100;
-const delayBetweenPageRequests = 5_000;
+let delayBetweenPageRequests = 7_000;
+let retry_after = 0;
 
 async function scrapeData(pageCount) {
   let currentPageFullUrl = "";
@@ -24,9 +25,10 @@ async function scrapeData(pageCount) {
     currentPageFullUrl = url + "/" + pageUrl + pageCount;
   }
 
+  let jobs = [];
+
   await axios(currentPageFullUrl)
     .then(async (response) => {
-      let jobs = [];
       const data = response.data;
       const $ = cheerio.load(data);
       const listItems = $(".JobList__List li");
@@ -61,7 +63,6 @@ async function scrapeData(pageCount) {
         const jobDate = $(el).find(".JCContentTop__Date").text().trim();
         let jobDescription = "";
 
-        
         await axios(jobUrl)
           .then(async (response) => {
             const data = response.data;
@@ -84,16 +85,15 @@ async function scrapeData(pageCount) {
         };
 
         jobs.push(job);
-        console.log("JOBURILE SUNT: " + (jobs[0]));
 
         // await jobModel
-        // .insertMany(job)
-        // .then((doc) => {
-        //   console.log(doc);
-        // })
-        // .catch((err) => {
-        //   console.log(err);
-        // });
+        //   .insertMany(job)
+        //   .then((doc) => {
+        //     // console.log(doc);
+        //   })
+        //   .catch((err) => {
+        //     console.log(err);
+        //   });
 
         fs.appendFile(
           "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/cron-tasks/jobs/ejobs-jobs-listed.json",
@@ -105,22 +105,18 @@ async function scrapeData(pageCount) {
           }
         );
       });
-
-      // fs.appendFile(
-      //   "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/cron-tasks/jobs/ejobs-jobs-listed.json",
-      //   JSON.stringify(jobs, null, 2),
-      //   (err) => {
-      //     if (err) {
-      //       console.error(err.message);
-      //     }
-      //   }
-      // );
-      return jobs;
     })
-    .catch((error) => {
-      console.log("GETS HERE 2");
+    .catch(async (error) => {
+      if (error.response && error.response.status === 429) {
+        retry_after = parseInt(error.response.headers["retry-after"]);
+        console.log(retry_after);
+        // await delay(retry_after * 1_500);
+      }
+
       console.error(error.message);
     });
+
+  console.log("JOBURILE SUNT: " + jobs.length);
 
   // await jobModel
   // .insertMany(allJobs)
@@ -141,7 +137,12 @@ const connectToMongoDBandScrape = async () => {
           await scrapeData(i).catch((error) => {
             console.error(error.message);
           });
-          await delay(delayBetweenPageRequests);
+          // await delay(delayBetweenPageRequests);
+          if (retry_after !== 0) {
+            delayBetweenPageRequests = retry_after;
+            retry_after = 0;
+            await delay(delayBetweenPageRequests * 1_500);
+          }
         }
       } finally {
         console.log("Connection closed");
