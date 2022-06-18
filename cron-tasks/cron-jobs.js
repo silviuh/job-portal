@@ -22,7 +22,6 @@ export default () => {
   let __dirname = path.resolve(path.dirname(""));
   __dirname = __dirname.substring(0, __dirname.lastIndexOf("/"));
   const directoryPath = path.join(__dirname, relativeJobsDirPath);
-  //const directoryPath = "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/cron-tasks/jobs";
 
   fs.readdir(directoryPath, function (err, files) {
     if (err) {

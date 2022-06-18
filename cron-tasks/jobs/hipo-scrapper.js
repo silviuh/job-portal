@@ -116,15 +116,6 @@ async function scrapePage(pageNumber) {
       //     // console.log("Successfully written data to file");
       //   }
       // );
-      // await jobModel
-      //   .insertMany(jobs)
-      //   .then((doc) => {
-      //     // console.log(doc);
-      //   })
-      //   .catch((err) => {
-      //     console.log(err);
-      //   });
-
       return jobs;
     })
     .catch((error) => {
