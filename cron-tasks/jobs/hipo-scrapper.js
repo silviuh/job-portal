@@ -101,21 +101,8 @@ async function scrapePage(pageNumber) {
             // else if (job) console.log(`${job}`);
           });
         }
-        // console.log(`[${jobNumber}]:  ${job}`);
       });
 
-      // console.log(jobs);
-      // fs.appendFile(
-      //   "/Users/silviuh1/workspace/dev/facultate/licenta/training/cron-tasks/jobs/hipo-jobs-listed.json",
-      //   JSON.stringify(jobs, null, 2),
-      //   (err) => {
-      //     if (err) {
-      //       console.error(err);
-      //       return;
-      //     }
-      //     // console.log("Successfully written data to file");
-      //   }
-      // );
       return jobs;
     })
     .catch((error) => {

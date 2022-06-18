@@ -2,3 +2,7 @@
 - find why RangeError [ERR_CHILD_PROCESS_STDIO_MAXBUFFER]: stdout maxBuffer length exceeded
 - find a way to use spawn instead of exec
 - find a way to store job data in mongodb instead of filesystem
+
+putem aplica o medie ponderata peste indexul jaccard:
+soft skills 1/2 out of relevance_ratings
+hard skills 1 out of relevance_ratings
