@@ -1,7 +1,3 @@
-// const axios = require("axios");
-// const cheerio = require("cheerio");
-// const express = require("express");
-// const fs = require("fs");
 import axios from "axios";
 import cheerio from "cheerio";
 import fs from "fs";
@@ -9,9 +5,9 @@ import db from "../../mongoDB/database.js";
 import mongoose from "mongoose";
 import jobModel from "../../mongoDB/schemas/job-schema.js";
 
-// const url = "https://www.ejobs.ro/locuri-de-munca";
 const pageUrl = "pagina";
 let theLastPage = false;
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function scrapeData() {
   const url = "https://www.hipo.ro/locuri-de-munca/cautajob";
@@ -24,6 +20,7 @@ async function scrapeData() {
     const numberOfElements = parseInt(selectedElem);
 
     for (let i = 1; i < numberOfElements; i++) {
+      console.log(`Scrapping...[${i}]`);
       await scrapePage(i);
     }
   });
@@ -31,12 +28,11 @@ async function scrapeData() {
 
 async function scrapePage(pageNumber) {
   let url = "";
+  let jobs = [];
 
   if (pageNumber !== 1)
     url = "https://www.hipo.ro/locuri-de-munca/cautajob" + "/" + pageNumber;
   else url = "https://www.hipo.ro/locuri-de-munca/cautajob";
-
-  const jobs = [];
 
   //tbl-hipo tbl-results
   await axios(url)
@@ -45,9 +41,10 @@ async function scrapePage(pageNumber) {
       const $ = cheerio.load(html_data);
       const baseURL = "https://www.hipo.ro/";
       const selectedElem = $(".tbl-hipo").find("tbody > tr");
+      let jobDescription = "";
 
       // console.log(selectedElem.text());
-      $(selectedElem).each((parentIndex, parentElem) => {
+      $(selectedElem).each(async (parentIndex, parentElem) => {
         const jobName = $(parentElem).find(".job-title > span").text().trim();
         const jobEmployer = $(parentElem)
           .find(".cell-company > a > span")
@@ -62,10 +59,21 @@ async function scrapePage(pageNumber) {
         let jobUrl =
           baseURL +
           $(parentElem).find(".cell-info").children(".job-title").attr("href");
+        jobUrl = encodeURI(jobUrl.trim());
 
-        jobUrl = jobUrl.trim();
-        // const jobDescription = $(el).fcleind(".JCContentMiddle__Info--Darker > a")[0].text() // TODO
         const jobDate = $(parentElem).find(".cell-date > span").text().trim();
+
+        if (!jobUrl.endsWith("undefined")) {
+          await axios(jobUrl)
+            .then(async (response) => {
+              const data = response.data;
+              const $ = cheerio.load(data);
+              jobDescription = $("#anunt-content").text().trim();
+            })
+            .catch((error) => {
+              console.error(error.message);
+            });
+        }
 
         if (
           !jobUrl.includes("undefined") &&
@@ -73,21 +81,25 @@ async function scrapePage(pageNumber) {
           jobName != "" &&
           jobEmployer != "" &&
           jobDate != "" &&
-          jobUrl != ""
+          jobUrl != "" &&
+          jobDescription != ""
         ) {
           const job = {
             jobName: jobName,
-            jobEmployer: jobEmployer, // numele angajatorului am nev de el, as avea nev de el aici, dar tre sa fac un request in plus
+            jobEmployer: jobEmployer,
             jobLocation: jobLocation,
             jobDate: jobDate,
             jobUrl: jobUrl,
-            jobDescription: "",
+            jobDescription: jobDescription,
             jobPageNumber: pageNumber,
           };
 
           const jobNumber = parentIndex * pageNumber;
-          // console.log(`${jobNumber} ${job}`);
-          jobs.push(job);
+          let jobInstance = new jobModel(job);
+          jobInstance.save(function (err, job) {
+            if (err) return console.error(err);
+            // else if (job) console.log(`${job}`);
+          });
         }
         // console.log(`[${jobNumber}]:  ${job}`);
       });
@@ -104,14 +116,14 @@ async function scrapePage(pageNumber) {
       //     // console.log("Successfully written data to file");
       //   }
       // );
-      await jobModel
-        .insertMany(jobs)
-        .then((doc) => {
-          // console.log(doc);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      // await jobModel
+      //   .insertMany(jobs)
+      //   .then((doc) => {
+      //     // console.log(doc);
+      //   })
+      //   .catch((err) => {
+      //     console.log(err);
+      //   });
 
       return jobs;
     })
@@ -119,25 +131,6 @@ async function scrapePage(pageNumber) {
       console.error(error);
     });
 }
-
-/*
-  app.get("/api/jobs", async (req, res) => {
-    try {
-      const crypto = await scrapeData();
-      return res.status(200).json({
-        result: crypto,
-      });
-    } catch (err) {
-      return res.status(500).json({
-        err: err.toString(),
-      });
-    }
-  });
-  
-  app.listen(PORT, () =>
-    console.log(`The server is active and running on port ${PORT}`)
-  );
-*/
 
 const connectToMongoDBandScrape = async () => {
   await db().then(async (mongoose) => {

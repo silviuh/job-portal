@@ -88,7 +88,7 @@ async function scrapePage(pageNumber) {
         jobs.push(job);
         let jobInstance = new jobModel(job);
 
-        jobInstance.save(function (err, book) {
+        jobInstance.save(function (err, job) {
           if (err) return console.error(err);
         });
       });
