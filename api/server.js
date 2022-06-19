@@ -5,6 +5,7 @@ import db from "../mongoDB/database.js";
 import passport from "passport";
 import users from "./routes/users.js";
 import jobs from "./routes/jobs.js";
+import engine from "./routes/engine.js";
 import passportConfing from "../config/passport.js";
 import bodyParser from "body-parser";
 
@@ -31,8 +32,8 @@ passportConfing(passport);
 
 app.use("/api/users", users);
 app.use("/api/jobs", jobs);
+app.use("/api/engine", engine);
 
 app.listen(port, () => {
   console.log(`[JOB PORTAL] app listening on port ${port}`);
 });
-

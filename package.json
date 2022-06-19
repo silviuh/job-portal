@@ -30,7 +30,8 @@
     "pretty": "^2.0.0",
     "promises": "^0.2.5",
     "puppeteer": "^13.7.0",
-    "validator": "^13.7.0"
+    "validator": "^13.7.0",
+    "zeromq": "^5.2.8"
   },
   "type": "module",
   "devDependencies": {
