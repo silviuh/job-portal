@@ -10,50 +10,43 @@ const router = express.Router();
 // app.use(bodyparser.json());
 // app.use(bodyparser.urlencoded({ extended: false }));
 
-router.post("/start-engine", (req, res) => {
-  let jobPosting = "";
+router.post("/start-engine", async (req, res) => {
   let resume = "";
+  resume = fs.readFileSync(
+    "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/user-resume.txt",
+    "utf8"
+  );
 
   try {
-    jobPosting = fs.readFileSync("/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/job-posting.txt", "utf8");
-    resume = fs.readFileSync("/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/user-resume.txt", "utf8");
+    const descriptions = await jobsModel.find(
+      {},
+      { jobDescription: 1, _id: 1, jobName: 1}
+    );
+
+    axios
+      .post("http://localhost:8000/get-score", {
+        jobPosting: descriptions,
+        resume: resume,
+        language: "english",
+      })
+      .then((res) => {
+        console.log(`statusCode: ${res.status}`);
+        console.log(res);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   } catch (err) {
-    console.error(err);
+    console.log(err.message);
   }
 
-  axios
-    .post("http://localhost:8000/get-score", {
-      jobPosting: jobPosting,
-      resume: resume,
-      language: "english"
-    })
-    .then((res) => {
-      console.log(`statusCode: ${res.status}`);
-      console.log(res);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-
-  //   //   const { array } = req.body;
-  //   //   console.log(array);
-
-  //   // Calculate sum
-  //   var sum = 0;
-  //   //   for (var i = 0; i < array.length; i++) {
-  //   //     if (isNaN(array[i])) {
-  //   //       continue;
-  //   //     }
-  //   //     sum += array[i];
-  //   //   }
-  //   //   console.log(sum);
-
-  //   // Return json response
-  //   res.json({ result: sum });
+  //   let jobPosting = "";
+  //   try {
+  //     jobPosting = fs.readFileSync("/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/job-posting.txt", "utf8");
+  //     resume = fs.readFileSync("/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/user-resume.txt", "utf8");
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
 });
 
-router.get("/mami", (req, res) => {
-  // runJobs();
-  res.send("Hello World!");
-});
 export default router;
