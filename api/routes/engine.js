@@ -13,15 +13,17 @@ const router = express.Router();
 router.post("/start-engine", async (req, res) => {
   let resume = "";
   resume = fs.readFileSync(
-    "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/user-resume.txt",
+    "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/user-resume-romana.txt",
     "utf8"
   );
 
   try {
     const descriptions = await jobsModel.find(
       {},
-      { jobDescription: 1, _id: 1, jobName: 1}
-    );
+      { jobDescription: 1, _id: 1, jobName: 1, jobLocation: 1 }
+    ); // adaugat scorul in elementul cu id ul aferent dupa sortare si dupa trimitere
+    // catre frontend paginata
+    // sau adaug dinamic campul score in mongo, sortez cu find si iau direct paginat
 
     axios
       .post("http://localhost:8000/get-score", {
