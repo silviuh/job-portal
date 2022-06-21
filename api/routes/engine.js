@@ -18,16 +18,14 @@ router.post("/start-engine", async (req, res) => {
   );
 
   try {
-    const descriptions = await jobsModel.find(
-      {},
-      { jobDescription: 1, _id: 1, jobName: 1, jobLocation: 1 }
-    ); // adaugat scorul in elementul cu id ul aferent dupa sortare si dupa trimitere
-    // catre frontend paginata
-    // sau adaug dinamic campul score in mongo, sortez cu find si iau direct paginat
+    const jobs = await jobsModel.find(
+      {}
+      //   { jobDescription: 1, _id: 1, jobName: 1, jobLocation: 1 }
+    );
 
     axios
       .post("http://localhost:8000/get-score", {
-        jobPosting: descriptions,
+        jobPosting: jobs,
         resume: resume,
         language: "english",
       })
@@ -41,14 +39,6 @@ router.post("/start-engine", async (req, res) => {
   } catch (err) {
     console.log(err.message);
   }
-
-  //   let jobPosting = "";
-  //   try {
-  //     jobPosting = fs.readFileSync("/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/job-posting.txt", "utf8");
-  //     resume = fs.readFileSync("/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/user-resume.txt", "utf8");
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
 });
 
 export default router;
