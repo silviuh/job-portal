@@ -31,6 +31,8 @@ router.get("/get-jobs", async (req, res) => {
   await jobsModel
     .find({}, {}, query)
     .then((data) => {
+      console.log(JSON.stringify(data));
+
       response = { error: false, message: data };
       const str = "\\";
       res.json(JSON.stringify(response, null, "").replace(str, ""));

@@ -23,7 +23,6 @@ router.get("/get-sorted-jobs", async (req, response) => {
       //   { jobDescription: 1, _id: 1, jobName: 1, jobLocation: 1 }
     );
 
-    //TODO SCOATE AWAIT URILE DE LA RES.JSOn
     await axios
       .post("http://localhost:8000/get-score", {
         jobPosting: jobs,
@@ -31,17 +30,16 @@ router.get("/get-sorted-jobs", async (req, response) => {
         language: "english",
       })
       .then((res) => {
-        console.log(`statusCode: ${res.status}`);
         const str = "\\";
+        console.log(`A request has been made: statusCode: ${res.status}`);
 
         const axiosResponse = {
           error: false,
           message: res.data.container_data,
-          //   message: JSON.stringify(res.data.container_data, null, "").replace(str, "")
         };
 
-        // response.json(JSON.stringify(axiosResponse, null, "").replace(str, ""));
-        response.json(axiosResponse);
+        response.json(JSON.stringify(axiosResponse, null, "").replace(str, ""));
+        // response.json(axiosResponse);
       })
       .catch((error) => {
         console.log(error.message);
