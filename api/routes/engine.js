@@ -10,7 +10,7 @@ const router = express.Router();
 // app.use(bodyparser.json());
 // app.use(bodyparser.urlencoded({ extended: false }));
 
-router.post("/start-engine", async (req, res) => {
+router.get("/get-sorted-jobs", async (req, response) => {
   let resume = "";
   resume = fs.readFileSync(
     "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/user-resume-romana.txt",
@@ -23,7 +23,8 @@ router.post("/start-engine", async (req, res) => {
       //   { jobDescription: 1, _id: 1, jobName: 1, jobLocation: 1 }
     );
 
-    axios
+    //TODO SCOATE AWAIT URILE DE LA RES.JSOn
+    await axios
       .post("http://localhost:8000/get-score", {
         jobPosting: jobs,
         resume: resume,
@@ -31,10 +32,24 @@ router.post("/start-engine", async (req, res) => {
       })
       .then((res) => {
         console.log(`statusCode: ${res.status}`);
-        console.log(res);
+        const str = "\\";
+
+        const axiosResponse = {
+          error: false,
+          message: res.data.container_data,
+          //   message: JSON.stringify(res.data.container_data, null, "").replace(str, "")
+        };
+
+        // response.json(JSON.stringify(axiosResponse, null, "").replace(str, ""));
+        response.json(axiosResponse);
       })
       .catch((error) => {
-        console.error(error);
+        console.log(error.message);
+        const axiosErrorResponse = {
+          error: true,
+          message: error.message,
+        };
+        response.json(JSON.stringify(axiosErrorResponse, null, "  "));
       });
   } catch (err) {
     console.log(err.message);
