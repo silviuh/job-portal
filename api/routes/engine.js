@@ -13,7 +13,7 @@ const router = express.Router();
 router.get("/get-sorted-jobs", async (req, response) => {
   let resume = "";
   resume = fs.readFileSync(
-    "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/user-resume-romana.txt",
+    "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/user-resume.txt",
     "utf8"
   );
 

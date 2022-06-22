@@ -3,6 +3,8 @@ PROFESSIONAL SUMMARY
 Data Scientist with Bachelor's degree in chemical engineering and strong knowledge of mathematics. Certified IBM Data Scientist with experience in data analysis focused on manipulating data sets from relational databases, data wrangling, storytelling with data visualization, statistical data analysis, and machine learning algorithms.
 
 CITY: Timisoara
+Bucuresti
+Iasi
 SKILLS
 *
 * Python - Pandas, Numpy, Matplotlib, Scipy, Scikit-learn, keras, tensorflow, nltk
