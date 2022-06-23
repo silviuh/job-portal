@@ -31,8 +31,6 @@ router.get("/get-jobs", async (req, res) => {
   await jobsModel
     .find({}, {}, query)
     .then((data) => {
-      console.log(JSON.stringify(data));
-
       if (data.length == 0)
         response = { error: false, message: data, isEmpty: "yes" };
       else response = { error: false, message: data };
