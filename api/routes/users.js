@@ -22,6 +22,7 @@ router.post("/register", async (req, res) => {
     if (user) {
       return res.status(400).json({ email: "Email already exists" });
     } else {
+      const currentDate = new Date();
       const newUser = new User({
         name: req.body.name,
         email: req.body.email,
@@ -85,6 +86,16 @@ router.post("/login", async (req, res) => {
             });
           }
         );
+
+        const currentDate = new Date();
+        const findQuerry = { email: user.email };
+        const updateQuerry = {
+          $set: { last_login_date: currentDate.toLocaleString() },
+        };
+
+        await User.findOneAndUpdate(findQuerry, updateQuerry).catch((error) => {
+          console.log(error.message);
+        });
       } else {
         return res
           .status(400)

@@ -28,6 +28,10 @@ const UserSchema = new Schema({
     type: String,
     required: true,
   },
+  last_login_date: {
+    type: String,
+    // required: true,
+  },
 });
 
 export default mongoose.model("users", UserSchema);
