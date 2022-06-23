@@ -44,6 +44,23 @@ router.post("/register", async (req, res) => {
   });
 });
 
+router.post("/upload-resume", (req, res) => {
+  const newpath = __dirname + "/files/";
+  const file = req.files.file;
+  const filename = file.name;
+
+  console.log(file);
+  console.log(filename);
+  console.log(`${newpath}${filename}`);
+
+  file.mv(`${newpath}${filename}`, (err) => {
+    if (err) {
+      res.status(500).send({ message: "File upload failed", code: 200 });
+    }
+    res.status(200).send({ message: "File Uploaded", code: 200 });
+  });
+});
+
 // @route POST api/users/login
 // @desc Login user and return JWT token
 // @access Public

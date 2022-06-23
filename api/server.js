@@ -28,6 +28,7 @@ app.use(
 );
 app.use(bodyParser.json());
 app.use(passport.initialize());
+app.use(express.static("files"));
 passportConfing(passport);
 
 app.use("/api/users", users);
