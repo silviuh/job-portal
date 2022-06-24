@@ -5,6 +5,7 @@ const recommendedJobs = mongoose.Schema({
   email: String, // String is shorthand for {type: String}
   jobs: [
     {
+      _id: String,
       jobLocation: String,
       jobName: String,
       jobEmployer: String,

@@ -15,11 +15,11 @@ const router = express.Router();
 router.get("/get-sorted-jobs-with-paginaton", async (req, res) => {
   let pageNo = parseInt(req.query.pageNo);
   let size = parseInt(req.query.size);
-  let email = req.body.email; // trimit jwt din fe si dau decode
+  let email = req.query.email; // trimit jwt din fe si dau decode
 
-  console.log(email);
-  console.log(pageNo);
-  console.log(size);
+  // console.log(email);
+  // console.log(pageNo);
+  // console.log(size);
 
   let query = {};
   let response = {};
@@ -41,12 +41,21 @@ router.get("/get-sorted-jobs-with-paginaton", async (req, res) => {
       { $unwind: "$jobs" },
       { $skip: size * (pageNo - 1) },
       { $limit: size },
+      { $project: { "jobs": 1, "_id": 0 } }
+      // { $group: { _id: "$jobs" } },
+      // { $project: { _id: 0 } },
     ])
     .then((data) => {
+      let newArray = []
+      for(let i = 0; i < data.length; i++)
+        newArray.push(data[i]["jobs"])
+
       if (data.length == 0)
-        response = { error: false, message: data, isEmpty: "yes" };
-      else response = { error: false, message: data };
+        response = { error: false, message: newArray, isEmpty: "yes" };
+      else response = { error: false, message: newArray };
       const str = "\\";
+
+      console.log(data);
       res.json(JSON.stringify(response, null, "").replace(str, ""));
     })
     .catch((error) => {
