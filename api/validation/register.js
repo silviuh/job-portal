@@ -1,6 +1,15 @@
 import Validator from "validator";
 import isEmpty from "is-empty";
 
+export const isFileValid = (file) => {
+  const type = file.type.split("/").pop();
+  const validTypes = ["jpg", "jpeg", "png", "pdf"];
+  if (validTypes.indexOf(type) === -1) {
+    return false;
+  }
+  return true;
+};
+
 export default function validateRegisterInput(data) {
   let errors = {};
   // Convert empty fields to an empty string so we can use validator functions

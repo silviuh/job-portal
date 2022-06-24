@@ -4,8 +4,10 @@ import jwt from "jsonwebtoken";
 import keys from "../../config/keys.js";
 import validateRegisterInput from "../validation/register.js";
 import validateLoginInput from "../validation/login.js";
+import isFileValid from "../validation/register.js";
 import User from "../../mongoDB/schemas/User.js";
 import db from "../../mongoDB/database.js";
+import formidable from "formidable";
 
 const router = express.Router();
 
@@ -13,35 +15,75 @@ const router = express.Router();
 // @desc Register user
 // @access Public
 router.post("/register", async (req, res) => {
-  const { errors, isValid } = validateRegisterInput(req.body);
-  if (!isValid) {
-    return res.status(400).json(errors);
-  }
+  const form = new formidable.IncomingForm();
+  const uploadFolder =
+    "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/resumes";
+  form.multiples = false;
+  form.maxFileSize = 100 * 1024 * 1024; // 5MB
+  form.uploadDir = uploadFolder;
 
-  await User.findOne({ email: req.body.email }).then(async (user) => {
-    if (user) {
-      return res.status(400).json({ email: "Email already exists" });
-    } else {
-      const currentDate = new Date();
-      const newUser = new User({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-        resume: req.body.resume,
-      });
-
-      bcrypt.genSalt(10, async (_err, salt) => {
-        bcrypt.hash(newUser.password, salt, async (err, hash) => {
-          if (err) throw err;
-          newUser.password = hash;
-          await newUser
-            .save()
-            .then((user) => res.json(user))
-            .catch((err) => console.log(err));
-        });
+  form.parse(req, (err, fields, files) => {
+    console.log(files);
+    if (err) {
+      console.log("error parsing the files");
+      return res.status(400).json({
+        status: "Fail",
+        message: "There was an error parsing the files",
+        error: err,
       });
     }
+
+    const file = fields.file;
+    const isValid = isValidFile(file);
+    const fileName = encodeURIComponent(file.name.replace(/\s/g, "-"));
+
+    console.log(file);
+
+    if (!isValid) {
+      return res.status(400).json({
+        status: "Fail",
+        message: "The file type isn not a valid type",
+      });
+    }
+
+    try {
+      fs.renameSync(file.path, join(uploadFolder, fileName));
+    } catch (error) {
+      console.log(error);
+    }
   });
+  // console.log("GOT HERE");
+  // console.log(req.files.file);
+
+  // const { errors, isValid } = validateRegisterInput(req.body);
+  // if (!isValid) {
+  //   return res.status(400).json(errors);
+  // }
+
+  // await User.findOne({ email: req.body.email }).then(async (user) => {
+  //   if (user) {
+  //     return res.status(400).json({ email: "Email already exists" });
+  //   } else {
+  //     const currentDate = new Date();
+  //     const newUser = new User({
+  //       name: req.body.name,
+  //       email: req.body.email,
+  //       password: req.body.password,
+  //       resume: req.body.resume,
+  //     });
+
+  //     bcrypt.genSalt(10, async (_err, salt) => {
+  //       bcrypt.hash(newUser.password, salt, async (err, hash) => {
+  //         if (err) throw err;
+  //         newUser.password = hash;
+  //         await newUser
+  //           .save()
+  //           .then((user) => res.json(user))
+  //           .catch((err) => console.log(err));
+  //       });
+  //     });
+  //   }
+  // });
 });
 
 router.post("/upload-resume", (req, res) => {
