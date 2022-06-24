@@ -8,6 +8,9 @@ import isFileValid from "../validation/register.js";
 import User from "../../mongoDB/schemas/User.js";
 import db from "../../mongoDB/database.js";
 import formidable from "formidable";
+import fs from "fs";
+import path from "path";
+import { dirname } from "path";
 
 const router = express.Router();
 
@@ -16,42 +19,119 @@ const router = express.Router();
 // @access Public
 router.post("/register", async (req, res) => {
   const form = new formidable.IncomingForm();
-  const uploadFolder =
-    "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/resumes";
-  form.multiples = false;
-  form.maxFileSize = 100 * 1024 * 1024; // 5MB
-  form.uploadDir = uploadFolder;
+  form.parse(req, function (err, fields, files) {
+    // console.log(files.fileObj);
 
-  form.parse(req, (err, fields, files) => {
-    console.log(files);
-    if (err) {
-      console.log("error parsing the files");
-      return res.status(400).json({
-        status: "Fail",
-        message: "There was an error parsing the files",
-        error: err,
-      });
-    }
+    var oldPath = files.fileObj.filepath;
+    var newPath =
+      path.join(
+        "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal",
+        "resumes"
+      ) +
+      "/" +
+      fields.fileName;
+    var rawData = fs.readFileSync(oldPath);
 
-    const file = fields.file;
-    const isValid = isValidFile(file);
-    const fileName = encodeURIComponent(file.name.replace(/\s/g, "-"));
-
-    console.log(file);
-
-    if (!isValid) {
-      return res.status(400).json({
-        status: "Fail",
-        message: "The file type isn not a valid type",
-      });
-    }
-
-    try {
-      fs.renameSync(file.path, join(uploadFolder, fileName));
-    } catch (error) {
-      console.log(error);
-    }
+    fs.writeFile(newPath, rawData, function (err) {
+      if (err) console.log(err);
+      return res.send("Successfully uploaded");
+    });
   });
+
+  // const form = new formidable.IncomingForm();
+  // const uploadFolder =
+  //   "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/resumes/";
+  // form.multiples = false;
+  // form.maxFileSize = 100 * 1024 * 1024; // 5MB
+  // form.uploadDir = uploadFolder;
+
+  // formData.append("fileObj", this.state.fileObject);
+  // formData.append("file", this.state.fileToUpload);
+  // formData.append("fileName", this.state.uploadedFileName);
+  // formData.append("name", this.state.name);
+  // formData.append("email", this.state.email);
+  // formData.append("password", this.state.password);
+  // formData.append("password2", this.state.password2);
+  // formData.append("resume", this.state.resume);
+
+  // form.parse(req, (err, fields, files) => {
+  //   // console.log(files);
+  //   // console.log(fields);
+  //   const fileName = fields.fileName;
+  //   const fileObj = files.fileObj;
+
+  //   console.log(fileObj);
+  //   console.log(fileObj.headers);
+
+  //   if (err) {
+  //     console.log("error parsing the files");
+  //     return res.status(400).json({
+  //       status: "Fail",
+  //       message: "There was an error parsing the files",
+  //       error: err,
+  //     });
+  //   }
+
+  //   let buff = new Buffer(fields.file, "base64");
+  //   fs.writeFileSync(uploadFolder + fileName, buff);
+  //   console.log(
+  //     "Base64 image data converted to file: stack-abuse-logo-out.png"
+  //   );
+
+  //   // fs.writeFile(uploadFolder + fileName, fields.file, "base64", (err) => {
+  //   //   if (err) {
+  //   //     console.error(err);
+  //   //   }
+  //   //   console.log("file written succesfully");
+  //   // });
+
+  //   // fs.writeFile(
+  //   //   uploadFolder + fileName,
+  //   //   fields.file,
+  //   //   "base64",
+  //   //   function (err) {
+  //   //     console.log(err);
+  //   //   }
+  //   // );
+
+  //   // try {
+  //   //   const dirname = path.dirname(uploadFolder + fileName);
+  //   //   fs.existsSync(dirname);
+  //   //   ensureDirectoryExistence(dirname);
+  //   //   fs.mkdirSync(dirname);
+  //   // } catch (error) {
+  //   //   console.log(error);
+  //   // }
+
+  //   // const file = fields.file;
+  //   // console.log(files.fileObj.type);
+  //   // console.log(files.fileObj.name);
+  //   // console.log(files.fileObj.uploadDir);
+
+  //   // file.mv(`${uploadFolder}${fileName}`, (err) => {
+  //   //   if (err) {
+  //   //     res.status(500).send({ message: "File upload failed", code: 200 });
+  //   //   }
+  //   //   res.status(200).send({ message: "File Uploaded", code: 200 });
+  //   // });
+  // });
+
+  // console.log(file);
+  // console.log(file.type);
+  // console.log(file.name);
+  // const isValid = isValidFile(file);
+  // const fileName = encodeURIComponent(file.name.replace(/\s/g, "-"));
+
+  // console.log(file);
+
+  // if (!isValid) {
+  //   return res.status(400).json({
+  //     status: "Fail",
+  //     message: "The file type isn not a valid type",
+  //   });
+  // }
+
+  // });
   // console.log("GOT HERE");
   // console.log(req.files.file);
 
