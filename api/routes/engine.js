@@ -1,6 +1,8 @@
 import express, { response } from "express";
 import runJobs from "../../cron-tasks/cron-jobs.js";
 import jobsModel from "../../mongoDB/schemas/job-schema.js";
+import recommendedJobsModel from "../../mongoDB/schemas/User-recommended-jobs.js";
+
 import db from "../../mongoDB/database.js";
 import bodyparser from "body-parser";
 import axios from "axios";
@@ -9,6 +11,52 @@ import fs from "fs";
 const router = express.Router();
 // app.use(bodyparser.json());
 // app.use(bodyparser.urlencoded({ extended: false }));
+
+router.get("/get-sorted-jobs-with-paginaton", async (req, res) => {
+  let pageNo = parseInt(req.query.pageNo);
+  let size = parseInt(req.query.size);
+  let email = req.body.email; // trimit jwt din fe si dau decode
+
+  console.log(email);
+  console.log(pageNo);
+  console.log(size);
+
+  let query = {};
+  let response = {};
+
+  if (pageNo < 0 || pageNo === 0) {
+    response = {
+      error: true,
+      message: "invalid page number, should start with 1",
+    };
+    return res.json(response);
+  }
+
+  query.skip = size * (pageNo - 1);
+  query.limit = size;
+
+  await recommendedJobsModel
+    .aggregate([
+      { $match: { email: email } },
+      { $unwind: "$jobs" },
+      { $skip: size * (pageNo - 1) },
+      { $limit: size },
+    ])
+    .then((data) => {
+      if (data.length == 0)
+        response = { error: false, message: data, isEmpty: "yes" };
+      else response = { error: false, message: data };
+      const str = "\\";
+      res.json(JSON.stringify(response, null, "").replace(str, ""));
+    })
+    .catch((error) => {
+      response = {
+        error: true,
+        message: error.message,
+      };
+      res.json(JSON.stringify(response, null, "  "));
+    });
+});
 
 router.get("/get-sorted-jobs", async (req, response) => {
   let resume = "";
