@@ -13,24 +13,25 @@ import path from "path";
 import { dirname } from "path";
 
 const router = express.Router();
+const __dirname = path.resolve(path.dirname(""));
+const resumeDirNamePrefix = "resumes";
 
 // @route POST api/users/register
 // @desc Register user
 // @access Public
 router.post("/register", async (req, res) => {
   const form = new formidable.IncomingForm();
-  form.parse(req, function (err, fields, files) {
-    // console.log(files.fileObj);
 
-    var oldPath = files.fileObj.filepath;
-    var newPath =
-      path.join(
-        "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal",
-        "resumes"
-      ) +
-      "/" +
-      fields.fileName;
-    var rawData = fs.readFileSync(oldPath);
+  form.parse(req, function (err, fields, files) {
+    const oldPath = files.fileObj.filepath;
+    const newDirPath = path.join(__dirname, resumeDirNamePrefix, fields.name); // every user will have his directory for resume
+
+    if (!fs.existsSync(newDirPath)) {
+      fs.mkdirSync(newDirPath, { recursive: true });
+    }
+    
+    const rawData = fs.readFileSync(oldPath);
+    const newPath = newDirPath + "/" + fields.fileName;
 
     fs.writeFile(newPath, rawData, function (err) {
       if (err) console.log(err);
