@@ -11,6 +11,8 @@ import formidable from "formidable";
 import fs from "fs";
 import path from "path";
 import { dirname } from "path";
+import { Server } from "http";
+import axios from "axios";
 
 const router = express.Router();
 const __dirname = path.resolve(path.dirname(""));
@@ -62,7 +64,7 @@ router.post("/register", async (req, res) => {
           email: reqBody.email,
           password: reqBody.password,
           resume: reqBody.resume,
-          resumePath: newPath
+          resumePath: newPath,
         });
 
         bcrypt.genSalt(10, async (_err, salt) => {
@@ -269,6 +271,20 @@ router.post("/login", async (req, res) => {
         await User.findOneAndUpdate(findQuerry, updateQuerry).catch((error) => {
           console.log(error.message);
         });
+
+        axios
+          .post("http://localhost:8000/preprocess-jobs-for-users", {
+            email: user.email,
+            resumePath: user.resumePath,
+          })
+          .then((res) => {
+            const str = "\\";
+            return res.status;
+          })
+          .catch((error) => {
+            console.log(error.message);
+            return error.message;
+          });
       } else {
         return res
           .status(400)
