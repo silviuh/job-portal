@@ -1,1 +1,0 @@
-Ayub, Raja & Ghazanfar, Mustansar ali & Maqsood, Muazzam & Saleem, Asjad. (2018). A Jaccard base similarity measure to improve performance of CF based recommender systems. 1-6. 10.1109/ICOIN.2018.8343073. 

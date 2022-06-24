@@ -22,6 +22,7 @@ export default function validateRegisterInput(data) {
   if (Validator.isEmpty(data.name)) {
     errors.name = "Name field is required";
   }
+  // Resume checks
   if (Validator.isEmpty(data.resume)) {
     errors.resume = "Resume field is required";
   }
@@ -48,4 +49,4 @@ export default function validateRegisterInput(data) {
     errors,
     isValid: isEmpty(errors),
   };
-};
+}

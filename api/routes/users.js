@@ -22,29 +22,62 @@ const resumeDirNamePrefix = "resumes";
 router.post("/register", async (req, res) => {
   const form = new formidable.IncomingForm();
 
-  form.parse(req, function (err, fields, files) {
+  form.parse(req, async function (err, fields, files) {
+    const reqBody = {
+      name: fields.name,
+      email: fields.email,
+      password: fields.password,
+      password2: fields.password2,
+      resume: fields.resume,
+    };
+
+    const { errors, isValid } = validateRegisterInput(reqBody);
+    if (!isValid) {
+      console.log(errors);
+      return res.status(400).json(errors);
+    }
+
     const oldPath = files.fileObj.filepath;
     const newDirPath = path.join(__dirname, resumeDirNamePrefix, fields.name); // every user will have his directory for resume
 
     if (!fs.existsSync(newDirPath)) {
       fs.mkdirSync(newDirPath, { recursive: true });
     }
-    
+
     const rawData = fs.readFileSync(oldPath);
     const newPath = newDirPath + "/" + fields.fileName;
 
     fs.writeFile(newPath, rawData, function (err) {
       if (err) console.log(err);
-      return res.send("Successfully uploaded");
+      // return res.send("Successfully uploaded");
+    });
+
+    await User.findOne({ email: reqBody.email }).then(async (user) => {
+      if (user) {
+        return res.status(400).json({ email: "Email already exists" });
+      } else {
+        const currentDate = new Date();
+        const newUser = new User({
+          name: reqBody.name,
+          email: reqBody.email,
+          password: reqBody.password,
+          resume: reqBody.resume,
+          resumePath: newPath
+        });
+
+        bcrypt.genSalt(10, async (_err, salt) => {
+          bcrypt.hash(newUser.password, salt, async (err, hash) => {
+            if (err) throw err;
+            newUser.password = hash;
+            await newUser
+              .save()
+              .then((user) => res.json(user))
+              .catch((err) => console.log(err));
+          });
+        });
+      }
     });
   });
-
-  // const form = new formidable.IncomingForm();
-  // const uploadFolder =
-  //   "/Users/silviuh1/workspace/dev/facultate/licenta/job-portal/resumes/";
-  // form.multiples = false;
-  // form.maxFileSize = 100 * 1024 * 1024; // 5MB
-  // form.uploadDir = uploadFolder;
 
   // formData.append("fileObj", this.state.fileObject);
   // formData.append("file", this.state.fileToUpload);
