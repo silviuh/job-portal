@@ -28,7 +28,8 @@ const jobSchema = mongoose.Schema({
   jobDate: reqString,
   jobUrl: reqURL,
   jobDescription: String,
-  jobPageNumber: Number
+  jobPageNumber: Number,
+  jobImageURL: String
 });
 
 export default mongoose.model("job", jobSchema);

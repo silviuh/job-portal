@@ -55,7 +55,6 @@ router.get("/get-sorted-jobs-with-paginaton", async (req, res) => {
       else response = { error: false, message: newArray };
       const str = "\\";
 
-      console.log(data);
       res.json(JSON.stringify(response, null, "").replace(str, ""));
     })
     .catch((error) => {

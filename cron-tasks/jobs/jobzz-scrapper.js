@@ -44,6 +44,13 @@ async function scrapePage(pageNumber) {
 
       $(selectedElem).each(async (parentIndex, parentElem) => {
         let jobEmployer = "";
+        const jobImageURL = $(parentElem).find(".overflow_image").children("img").attr("src");
+        console.log(jobImageURL);
+
+        if (typeof jobImageURL === 'undefined')
+          jobImageURL = "https://cdn-icons-png.flaticon.com/512/2936/2936630.png";
+
+
         const jobName = $(parentElem).find(".title").text().trim();
         const jobLocation = $(parentElem)
           .find(".location_area")
@@ -82,6 +89,7 @@ async function scrapePage(pageNumber) {
           jobUrl: jobUrl,
           jobDescription: jobDescription,
           jobPageNumber: pageNumber,
+          jobImageURL: jobImageURL
         };
 
         const jobNumber = parentIndex * pageNumber;

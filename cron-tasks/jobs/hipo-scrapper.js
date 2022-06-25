@@ -45,6 +45,7 @@ async function scrapePage(pageNumber) {
 
       // console.log(selectedElem.text());
       $(selectedElem).each(async (parentIndex, parentElem) => {
+        let jobImageURL = "";
         const jobName = $(parentElem).find(".job-title > span").text().trim();
         const jobEmployer = $(parentElem)
           .find(".cell-company > a > span")
@@ -69,6 +70,13 @@ async function scrapePage(pageNumber) {
               const data = response.data;
               const $ = cheerio.load(data);
               jobDescription = $("#anunt-content").text().trim();
+              jobImageURL = $(".companie-logo")
+                .children("a")
+                .children("img")
+                .attr("src");
+              if (typeof jobImageURL === "undefined")
+                jobImageURL =
+                  "https://cdn-icons-png.flaticon.com/512/2936/2936630.png";
             })
             .catch((error) => {
               console.error(error.message);
@@ -92,6 +100,7 @@ async function scrapePage(pageNumber) {
             jobUrl: jobUrl,
             jobDescription: jobDescription,
             jobPageNumber: pageNumber,
+            jobImageURL: jobImageURL,
           };
 
           const jobNumber = parentIndex * pageNumber;

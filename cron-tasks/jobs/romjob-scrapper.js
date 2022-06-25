@@ -24,6 +24,7 @@ async function scrapeData() {
       .text();
     const numberOfElements = parseInt(selectedElem);
 
+    // for (let i = 1; i <= numberOfElements; i++) {
     for (let i = 1; i <= numberOfElements; i++) {
       await scrapePage(i);
       console.log(`Scrapping...[${i}]`);
@@ -49,6 +50,7 @@ async function scrapePage(pageNumber) {
       $(selectedElem).each(async (parentIndex, parentElem) => {
         let jobEmployer = "";
         let jobDescription = "";
+        let jobImageURL = "";
 
         const jobName = $(parentElem)
           .find(".listing-data")
@@ -80,6 +82,13 @@ async function scrapePage(pageNumber) {
             .then(async (response) => {
               const data = response.data;
               const $ = cheerio.load(data);
+              jobImageURL = $(".imgZone").find("img").attr("src");
+              if (typeof jobImageURL === "undefined")
+                jobImageURL =
+                  "https://cdn-icons-png.flaticon.com/512/2936/2936630.png";
+
+              console.log(jobImageURL);
+
               jobEmployer = $(".userdata")
                 .children("h3")
                 .children("a")
@@ -88,7 +97,8 @@ async function scrapePage(pageNumber) {
               jobDescription = $(".article-detail")
                 .children("p")
                 .children("span")
-                .text().trim();
+                .text()
+                .trim();
             })
             .catch((error) => {
               console.error(error.message);

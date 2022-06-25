@@ -18,10 +18,26 @@ async function scrapeData() {
   await axios(searchUrl).then(async (response) => {
     const html_data = response.data;
     const $ = cheerio.load(html_data);
+    // jobs-search-results__list list-style-none pt lista
+    // class="artdeco-pagination__pages artdeco-pagination__pages--number"
+
+    const paginationList = $(".artdeco-pagination__pages");
+    const jobsList = $(".jobs-search-results__list")
+    const header = $(".jobs-search-results-list__title-heading--pre-orchestra");
+
+    console.log(header.html());
+    // console.log(paginationList);
+
+    $(jobsList).each( (index, el) => {
+      console.log("gets here");
+      console.log(el);
+    });
+
+    // console.log(html_data);
     // const selectedElem = $('[aria-label="paginare"]').children('.pv5.artdeco-pagination.ember-view"');
-    const selectedElem = $(
-      ".artdeco-pagination__pages.artdeco-pagination__pages--number"
-    ).children().last().children("button").children("span").html();
+    // const selectedElem = $(
+    //   ".artdeco-pagination__pages.artdeco-pagination__pages--number"
+    // ).children().last().children("button").children("span").html();
     //   ".artdeco-pagination__pages.artdeco-pagination__pages--number"
     // )
     //   .last()
@@ -33,7 +49,7 @@ async function scrapeData() {
     //   .text();
     // const numberOfElements = parseInt(selectedElem);
 
-    console.log(selectedElem);
+    // console.log(selectedElem);
 
     // for (let i = 1; i < numberOfElements; i++) {
     //   await scrapePage(i);
