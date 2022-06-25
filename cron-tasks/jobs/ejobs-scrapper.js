@@ -13,6 +13,8 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const pagesNumber = 100;
 let delayBetweenPageRequests = 7_000;
 let retry_after = 0;
+const replaceExpr = '"';
+const regex = new RegExp(replaceExpr, "g");
 
 async function scrapePage(pageCount) {
   let currentPageFullUrl = "";
@@ -42,7 +44,7 @@ async function scrapePage(pageCount) {
       }
 
       listItems.each(async (idx, el) => {
-        const jobImageURL = $(el)
+        let jobImageURL = $(el)
           .find(".JCContent")
           .find(".JCContent__Logo")
           .children("img")
@@ -53,22 +55,22 @@ async function scrapePage(pageCount) {
 
         console.log(jobImg);
 
-        const jobName = $(el)
+        let jobName = $(el)
           .find(".JCContentMiddle__Title > a > span")
           .text()
           .trim();
-        const jobEmployer = $(el)
+        let jobEmployer = $(el)
           .find(".JCContentMiddle__Info--Darker > a")
           .text()
           .trim();
-        const jobLocation = $(el)
+        let jobLocation = $(el)
           .find(".JCContentMiddle")
           .children("span")
           .text()
           .trim();
-        const jobUrl =
+        let jobUrl =
           baseURL + $(el).find(".JCContentMiddle__Title > a").attr("href");
-        const jobDate = $(el).find(".JCContentTop__Date").text().trim();
+        let jobDate = $(el).find(".JCContentTop__Date").text().trim();
         let jobDescription = "";
 
         await axios(jobUrl)
@@ -81,6 +83,21 @@ async function scrapePage(pageCount) {
           .catch((error) => {
             console.error(error.message);
           });
+
+        if (typeof jobName !== "undefined")
+          jobName = String(jobName).replace(regex, "");
+        if (typeof jobEmployer !== "undefined")
+          jobEmployer = String(jobEmployer).replace(regex, "");
+        if (typeof jobLocation !== "undefined")
+          jobLocation = String(jobLocation).replace(regex, "");
+        if (typeof jobDate !== "undefined")
+          jobDate = String(jobDate).replace(regex, "");
+        if (typeof jobUrl !== "undefined")
+          jobUrl = String(jobUrl).replace(regex, "");
+        if (typeof jobDescription !== "undefined")
+          jobDescription = String(jobDescription).replace(regex, "");
+        if (typeof jobImageURL !== "undefined")
+          jobImageURL = String(jobImageURL).replace(regex, "");
 
         const job = {
           jobName: jobName,

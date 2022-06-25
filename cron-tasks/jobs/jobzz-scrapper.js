@@ -12,6 +12,8 @@ const searchUrl = "https://jobzz.ro/locuri-de-munca-in-romania";
 const prefix = ".html";
 let theLastPage = false;
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const replaceExpr = '"';
+const regex = new RegExp(replaceExpr, "g");
 
 async function scrapeData() {
   const url = searchUrl + prefix;
@@ -23,6 +25,7 @@ async function scrapeData() {
     const numberOfElements = parseInt(selectedElem);
 
     for (let i = 1; i < numberOfElements; i++) {
+      await delay(5_000);
       await scrapePage(i);
       console.log(`Scrapping...[${i}]`);
     }
@@ -44,15 +47,17 @@ async function scrapePage(pageNumber) {
 
       $(selectedElem).each(async (parentIndex, parentElem) => {
         let jobEmployer = "";
-        const jobImageURL = $(parentElem).find(".overflow_image").children("img").attr("src");
-        console.log(jobImageURL);
+        let jobImageURL = $(parentElem)
+          .find(".overflow_image")
+          .children("img")
+          .attr("src");
 
-        if (typeof jobImageURL === 'undefined')
-          jobImageURL = "https://cdn-icons-png.flaticon.com/512/2936/2936630.png";
+        if (typeof jobImageURL === "undefined")
+          jobImageURL =
+            "https://cdn-icons-png.flaticon.com/512/2936/2936630.png";
 
-
-        const jobName = $(parentElem).find(".title").text().trim();
-        const jobLocation = $(parentElem)
+        let jobName = $(parentElem).find(".title").text().trim();
+        let jobLocation = $(parentElem)
           .find(".location_area")
           .children(".location")
           .text()
@@ -64,7 +69,7 @@ async function scrapePage(pageNumber) {
         if ($(parentElem).attr("href") !== undefined)
           jobUrl = $(parentElem).attr("href");
 
-        const jobDate = $(parentElem)
+        let jobDate = $(parentElem)
           .find(".location_area")
           .children(".date")
           .text()
@@ -81,6 +86,21 @@ async function scrapePage(pageNumber) {
             console.error(error.message);
           });
 
+        if (typeof jobName !== "undefined")
+          jobName = String(jobName).replace(regex, "");
+        if (typeof jobEmployer !== "undefined")
+          jobEmployer = String(jobEmployer).replace(regex, "");
+        if (typeof jobLocation !== "undefined")
+          jobLocation = String(jobLocation).replace(regex, "");
+        if (typeof jobDate !== "undefined")
+          jobDate = String(jobDate).replace(regex, "");
+        if (typeof jobUrl !== "undefined")
+          jobUrl = String(jobUrl).replace(regex, "");
+        if (typeof jobDescription !== "undefined")
+          jobDescription = String(jobDescription).replace(regex, "");
+        if (typeof jobImageURL !== "undefined")
+          jobImageURL = String(jobImageURL).replace(regex, "");
+
         const job = {
           jobName: jobName,
           jobEmployer: jobEmployer,
@@ -89,7 +109,7 @@ async function scrapePage(pageNumber) {
           jobUrl: jobUrl,
           jobDescription: jobDescription,
           jobPageNumber: pageNumber,
-          jobImageURL: jobImageURL
+          jobImageURL: jobImageURL,
         };
 
         const jobNumber = parentIndex * pageNumber;
@@ -113,7 +133,7 @@ async function scrapePage(pageNumber) {
       return jobs;
     })
     .catch((error) => {
-      console.error(error);
+      console.error(error.message);
     });
 }
 

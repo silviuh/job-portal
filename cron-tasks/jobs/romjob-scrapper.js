@@ -12,6 +12,8 @@ import { html } from "cheerio/lib/static.js";
 const searchUrl = "https://www.romjob.ro/anunturi/locuri-de-munca/";
 const prefix = "?" + "pag=";
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const replaceExpr = '"';
+const regex = new RegExp(replaceExpr, "g");
 
 async function scrapeData() {
   await axios(searchUrl).then(async (response) => {
@@ -52,27 +54,27 @@ async function scrapePage(pageNumber) {
         let jobDescription = "";
         let jobImageURL = "";
 
-        const jobName = $(parentElem)
+        let jobName = $(parentElem)
           .find(".listing-data")
           .first()
           .find("h3")
           .text()
           .trim();
 
-        const jobLocation = $(parentElem)
+        let jobLocation = $(parentElem)
           .find(".listing-data")
           .find(".article-location")
           .text()
           .trim();
 
-        const jobUrl = $(parentElem)
+        let jobUrl = $(parentElem)
           .find(".listing-data")
           .find(".large-8.medium-7.columns")
           .children("h3")
           .children("a")
           .attr("href");
 
-        const jobDate = $(parentElem)
+        let jobDate = $(parentElem)
           .find(".listing-data")
           .find(".article-date")
           .text();
@@ -102,6 +104,27 @@ async function scrapePage(pageNumber) {
               console.error(error.message);
             });
 
+          if (typeof jobName !== "undefined")
+            jobName = String(jobName).replace(regex, "");
+
+          if (typeof jobEmployer !== "undefined")
+            jobEmployer = String(jobEmployer).replace(regex, "");
+
+          if (typeof jobLocation !== "undefined")
+            jobLocation = String(jobLocation).replace(regex, "");
+
+          if (typeof jobDate !== "undefined")
+            jobDate = String(jobDate).replace(regex, "");
+
+          if (typeof jobUrl !== "undefined")
+            jobUrl = String(jobUrl).replace(regex, "");
+
+          if (typeof jobDescription !== "undefined")
+            jobDescription = String(jobDescription).replace(regex, "");
+
+          if (typeof jobImageURL !== "undefined")
+            jobImageURL = String(jobImageURL).replace(regex, "");
+
           const job = {
             jobName: jobName,
             jobEmployer: jobEmployer,
@@ -110,7 +133,7 @@ async function scrapePage(pageNumber) {
             jobUrl: jobUrl,
             jobDescription: jobDescription,
             jobPageNumber: pageNumber,
-            jobImageURL: jobImageURL
+            jobImageURL: jobImageURL,
           };
 
           let jobInstance = new jobModel(job);
@@ -123,7 +146,7 @@ async function scrapePage(pageNumber) {
       return jobs;
     })
     .catch((error) => {
-      console.error(error);
+      console.error(error).message;
     });
 }
 

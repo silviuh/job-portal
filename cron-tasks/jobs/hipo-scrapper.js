@@ -8,6 +8,8 @@ import jobModel from "../../mongoDB/schemas/job-schema.js";
 const pageUrl = "pagina";
 let theLastPage = false;
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const replaceExpr = '"';
+const regex = new RegExp(replaceExpr, "g");
 
 async function scrapeData() {
   const url = "https://www.hipo.ro/locuri-de-munca/cautajob";
@@ -46,12 +48,12 @@ async function scrapePage(pageNumber) {
       // console.log(selectedElem.text());
       $(selectedElem).each(async (parentIndex, parentElem) => {
         let jobImageURL = "";
-        const jobName = $(parentElem).find(".job-title > span").text().trim();
-        const jobEmployer = $(parentElem)
+        let jobName = $(parentElem).find(".job-title > span").text().trim();
+        let jobEmployer = $(parentElem)
           .find(".cell-company > a > span")
           .text()
           .trim();
-        const jobLocation = $(parentElem)
+        let jobLocation = $(parentElem)
           .find(".cell-city > span > a > span")
           .children("span")
           .text()
@@ -62,7 +64,7 @@ async function scrapePage(pageNumber) {
           $(parentElem).find(".cell-info").children(".job-title").attr("href");
         jobUrl = encodeURI(jobUrl.trim());
 
-        const jobDate = $(parentElem).find(".cell-date > span").text().trim();
+        let jobDate = $(parentElem).find(".cell-date > span").text().trim();
 
         if (!jobUrl.endsWith("undefined")) {
           await axios(jobUrl)
@@ -83,27 +85,42 @@ async function scrapePage(pageNumber) {
             });
         }
 
-        if (
-          !jobUrl.includes("undefined") &&
-          jobLocation != "" &&
-          jobName != "" &&
-          jobEmployer != "" &&
-          jobDate != "" &&
-          jobUrl != "" &&
-          jobDescription != ""
-        ) {
-          const job = {
-            jobName: jobName,
-            jobEmployer: jobEmployer,
-            jobLocation: jobLocation,
-            jobDate: jobDate,
-            jobUrl: jobUrl,
-            jobDescription: jobDescription,
-            jobPageNumber: pageNumber,
-            jobImageURL: jobImageURL,
-          };
+        if (typeof jobName !== "undefined")
+          jobName = String(jobName).replace(regex, "");
+        if (typeof jobEmployer !== "undefined")
+          jobEmployer = String(jobEmployer).replace(regex, "");
+        if (typeof jobLocation !== "undefined")
+          jobLocation = String(jobLocation).replace(regex, "");
+        if (typeof jobDate !== "undefined")
+          jobDate = String(jobDate).replace(regex, "");
+        if (typeof jobUrl !== "undefined")
+          jobUrl = String(jobUrl).replace(regex, "");
+        if (typeof jobDescription !== "undefined")
+          jobDescription = String(jobDescription).replace(regex, "");
+        if (typeof jobImageURL !== "undefined")
+          jobImageURL = String(jobImageURL).replace(regex, "");
 
-          const jobNumber = parentIndex * pageNumber;
+        const jobNumber = parentIndex * pageNumber;
+        const job = {
+          jobName: jobName,
+          jobEmployer: jobEmployer,
+          jobLocation: jobLocation,
+          jobDate: jobDate,
+          jobUrl: jobUrl,
+          jobDescription: jobDescription,
+          jobPageNumber: pageNumber,
+          jobImageURL: jobImageURL,
+        };
+
+        if (
+          job.jobName !== "" &&
+          job.jobEmployer !== "" &&
+          job.jobLocation !== "" &&
+          job.jobDate !== "" &&
+          job.jobUrl !== "" &&
+          job.jobDescription !== "" &&
+          job.jobImageURL !== ""
+        ) {
           let jobInstance = new jobModel(job);
           jobInstance.save(function (err, job) {
             if (err) return console.error(err);

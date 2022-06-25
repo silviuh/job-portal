@@ -11,6 +11,8 @@ import jobModel from "../../mongoDB/schemas/job-schema.js";
 const searchUrl = "https://www.linkedin.com/jobs/search/?location=romania";
 const prefix = "&start=";
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const replaceExpr = '"';
+const regex = new RegExp(replaceExpr, "g");
 
 async function scrapeData() {
   const url = searchUrl + prefix;
@@ -22,13 +24,13 @@ async function scrapeData() {
     // class="artdeco-pagination__pages artdeco-pagination__pages--number"
 
     const paginationList = $(".artdeco-pagination__pages");
-    const jobsList = $(".jobs-search-results__list")
+    const jobsList = $(".jobs-search-results__list");
     const header = $(".jobs-search-results-list__title-heading--pre-orchestra");
 
     console.log(header.html());
     // console.log(paginationList);
 
-    $(jobsList).each( (index, el) => {
+    $(jobsList).each((index, el) => {
       console.log("gets here");
       console.log(el);
     });
@@ -102,6 +104,21 @@ async function scrapePage(pageNumber) {
           .catch((error) => {
             console.error(error.message);
           });
+
+        if (typeof jobName !== "undefined")
+          jobName = String(jobName).replace(regex, "");
+        if (typeof jobEmployer !== "undefined")
+          jobEmployer = String(jobEmployer).replace(regex, "");
+        if (typeof jobLocation !== "undefined")
+          jobLocation = String(jobLocation).replace(regex, "");
+        if (typeof jobDate !== "undefined")
+          jobDate = String(jobDate).replace(regex, "");
+        if (typeof jobUrl !== "undefined")
+          jobUrl = String(jobUrl).replace(regex, "");
+        if (typeof jobDescription !== "undefined")
+          jobDescription = String(jobDescription).replace(regex, "");
+        if (typeof jobImageURL !== "undefined")
+          jobImageURL = String(jobImageURL).replace(regex, "");
 
         const job = {
           jobName: jobName,
