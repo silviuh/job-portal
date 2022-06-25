@@ -87,8 +87,6 @@ async function scrapePage(pageNumber) {
                 jobImageURL =
                   "https://cdn-icons-png.flaticon.com/512/2936/2936630.png";
 
-              console.log(jobImageURL);
-
               jobEmployer = $(".userdata")
                 .children("h3")
                 .children("a")
@@ -112,6 +110,7 @@ async function scrapePage(pageNumber) {
             jobUrl: jobUrl,
             jobDescription: jobDescription,
             jobPageNumber: pageNumber,
+            jobImageURL: jobImageURL
           };
 
           let jobInstance = new jobModel(job);

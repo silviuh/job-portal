@@ -17,9 +17,9 @@ router.get("/get-sorted-jobs-with-paginaton", async (req, res) => {
   let size = parseInt(req.query.size);
   let email = req.query.email; // trimit jwt din fe si dau decode
 
-  // console.log(email);
-  // console.log(pageNo);
-  // console.log(size);
+  console.log("[get-sorted-jobs-with-paginaton] EMAIL: " + email);
+  console.log("[get-sorted-jobs-with-paginaton] PAGE NO: " + pageNo);
+  console.log("[get-sorted-jobs-with-paginaton]] SIZE :" + size);
 
   let query = {};
   let response = {};
@@ -41,16 +41,16 @@ router.get("/get-sorted-jobs-with-paginaton", async (req, res) => {
       { $unwind: "$jobs" },
       { $skip: size * (pageNo - 1) },
       { $limit: size },
-      { $project: { "jobs": 1, "_id": 0 } }
+      { $project: { jobs: 1, _id: 0 } },
       // { $group: { _id: "$jobs" } },
       // { $project: { _id: 0 } },
     ])
     .then((data) => {
-      let newArray = []
-      for(let i = 0; i < data.length; i++)
-        newArray.push(data[i]["jobs"])
+      let newArray = [];
+      for (let i = 0; i < data.length; i++) newArray.push(data[i]["jobs"]);
 
-      if (data.length == 0)
+      console.log("[get-sorted-jobs-with-paginaton]" + " " + newArray.length);
+      if (newArray.length === 0)
         response = { error: false, message: newArray, isEmpty: "yes" };
       else response = { error: false, message: newArray };
       const str = "\\";

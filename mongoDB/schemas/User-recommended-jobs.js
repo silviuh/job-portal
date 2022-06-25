@@ -13,6 +13,7 @@ const recommendedJobs = mongoose.Schema({
       jobUrl: String,
       jobDescription: String,
       score: String,
+      jobImageURL: String
     }
   ]
 });
