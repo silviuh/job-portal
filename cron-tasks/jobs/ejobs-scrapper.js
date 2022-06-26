@@ -53,7 +53,6 @@ async function scrapePage(pageCount) {
           jobImageURL =
             "https://cdn-icons-png.flaticon.com/512/2936/2936630.png";
 
-        console.log(jobImg);
 
         let jobName = $(el)
           .find(".JCContentMiddle__Title > a > span")
@@ -145,7 +144,7 @@ const connectToMongoDBandScrape = async () => {
       try {
         console.log("Connected tÏo mongodb!");
         for (let i = 0; i < pagesNumber; i++ && theLastPage == false) {
-          // await delay(6_000);
+          await delay(10_000);
           console.log("Scrapping page: " + i);
 
           await scrapePage(i).catch(async (error) => {
