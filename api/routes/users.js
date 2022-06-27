@@ -77,6 +77,20 @@ router.post("/register", async (req, res) => {
               .catch((err) => console.log(err));
           });
         });
+
+        axios
+          .post("http://localhost:8000/register-job-for-user", {
+            email: newUser.email,
+            resumePath: newUser.resumePath,
+          })
+          .then((res) => {
+            const str = "\\";
+            return res.status;
+          })
+          .catch((error) => {
+            console.log(error.message);
+            return error.message;
+          });
       }
     });
   });
