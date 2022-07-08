@@ -21,10 +21,10 @@ async function scrapeData() {
     selectedElem = selectedElem.substring(selectedElem.lastIndexOf("/") + 1);
     const numberOfElements = parseInt(selectedElem);
 
-    for (let i = 1; 40 < numberOfElements; i++) {
+    for (let i = 1; i < numberOfElements; i++) {
       console.log(`Scrapping...[${i}]`);
       await scrapePage(i);
-      await delay(5_000);
+      // await delay(2_000);
     }
   });
 }

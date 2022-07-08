@@ -24,8 +24,10 @@ async function scrapeData() {
     const selectedElem = $(".last_page").text().trim();
     const numberOfElements = parseInt(selectedElem);
 
+    console.log(numberOfElements)
+
     for (let i = 1; i < numberOfElements; i++) {
-      await delay(5_000);
+      await delay(2_000);
       await scrapePage(i);
       console.log(`Scrapping...[${i}]`);
     }

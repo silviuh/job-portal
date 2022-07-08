@@ -28,6 +28,7 @@ async function scrapeData() {
 
     // for (let i = 1; i <= numberOfElements; i++) {
     for (let i = 1; i <= numberOfElements; i++) {
+      await delay(1_000);
       await scrapePage(i);
       console.log(`Scrapping...[${i}]`);
     }
@@ -106,22 +107,16 @@ async function scrapePage(pageNumber) {
 
           if (typeof jobName !== "undefined")
             jobName = String(jobName).replace(regex, "");
-
           if (typeof jobEmployer !== "undefined")
             jobEmployer = String(jobEmployer).replace(regex, "");
-
           if (typeof jobLocation !== "undefined")
             jobLocation = String(jobLocation).replace(regex, "");
-
           if (typeof jobDate !== "undefined")
             jobDate = String(jobDate).replace(regex, "");
-
           if (typeof jobUrl !== "undefined")
             jobUrl = String(jobUrl).replace(regex, "");
-
           if (typeof jobDescription !== "undefined")
             jobDescription = String(jobDescription).replace(regex, "");
-
           if (typeof jobImageURL !== "undefined")
             jobImageURL = String(jobImageURL).replace(regex, "");
 

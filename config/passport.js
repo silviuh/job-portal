@@ -12,7 +12,7 @@ export default (passport) => {
   passport.use(
     new JwtStrategy(opts, (jwt_payload, done) => {
       User.findById(jwt_payload.id)
-        .then((user) => {
+        .then((user) => { 
           if (user) {
             return done(null, user);
           }

@@ -143,8 +143,8 @@ const connectToMongoDBandScrape = async () => {
     .then(async (mongoose) => {
       try {
         console.log("Connected tÏo mongodb!");
-        for (let i = 0; i < pagesNumber; i++ && theLastPage == false) {
-          await delay(10_000);
+        for (let i = 27; i < pagesNumber; i++ && theLastPage == false) {
+          await delay(2_000);
           console.log("Scrapping page: " + i);
 
           await scrapePage(i).catch(async (error) => {
