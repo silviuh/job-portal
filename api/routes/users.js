@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import keys from "../../config/keys.js";
 import validateRegisterInput from "../validation/register.js";
+import validateUpdateInput from "../validation/update.js";
 import validateLoginInput from "../validation/login.js";
 import isFileValid from "../validation/register.js";
 import User from "../../mongoDB/schemas/User.js";
@@ -97,126 +98,78 @@ router.post("/register", async (req, res) => {
       }
     });
   });
+});
 
-  // formData.append("fileObj", this.state.fileObject);
-  // formData.append("file", this.state.fileToUpload);
-  // formData.append("fileName", this.state.uploadedFileName);
-  // formData.append("name", this.state.name);
-  // formData.append("email", this.state.email);
-  // formData.append("password", this.state.password);
-  // formData.append("password2", this.state.password2);
-  // formData.append("resume", this.state.resume);
+router.post("/update", async (req, res) => {
+  const form = new formidable.IncomingForm();
 
-  // form.parse(req, (err, fields, files) => {
-  //   // console.log(files);
-  //   // console.log(fields);
-  //   const fileName = fields.fileName;
-  //   const fileObj = files.fileObj;
+  form.parse(req, async function (err, fields, files) {
+    let newPath = "";
+    const reqBody = {
+      email: fields.email,
+      password: fields.password,
+      password2: fields.password2,
+    };
 
-  //   console.log(fileObj);
-  //   console.log(fileObj.headers);
+    const { errors, isValid } = validateUpdateInput(reqBody);
+    if (!isValid) {
+      console.log(errors);
+      return res.status(400).json(errors);
+    }
 
-  //   if (err) {
-  //     console.log("error parsing the files");
-  //     return res.status(400).json({
-  //       status: "Fail",
-  //       message: "There was an error parsing the files",
-  //       error: err,
-  //     });
-  //   }
+    await User.findOne({ email: reqBody.email }).then(async (user) => {
+      if (user) {
+        if (files) {
+          if (fs.existsSync(user.resumePath)) {
+            fs.unlinkSync(user.resumePath);
+          }
 
-  //   let buff = new Buffer(fields.file, "base64");
-  //   fs.writeFileSync(uploadFolder + fileName, buff);
-  //   console.log(
-  //     "Base64 image data converted to file: stack-abuse-logo-out.png"
-  //   );
+          const oldPath = files.fileObj.filepath;
+          const newDirPath = path.join(
+            __dirname,
+            resumeDirNamePrefix,
+            user.name
+          );
 
-  //   // fs.writeFile(uploadFolder + fileName, fields.file, "base64", (err) => {
-  //   //   if (err) {
-  //   //     console.error(err);
-  //   //   }
-  //   //   console.log("file written succesfully");
-  //   // });
+          if (!fs.existsSync(newDirPath)) {
+            fs.mkdirSync(newDirPath, { recursive: true });
+          }
 
-  //   // fs.writeFile(
-  //   //   uploadFolder + fileName,
-  //   //   fields.file,
-  //   //   "base64",
-  //   //   function (err) {
-  //   //     console.log(err);
-  //   //   }
-  //   // );
+          const rawData = fs.readFileSync(oldPath);
+          newPath = newDirPath + "/" + fields.fileName;
 
-  //   // try {
-  //   //   const dirname = path.dirname(uploadFolder + fileName);
-  //   //   fs.existsSync(dirname);
-  //   //   ensureDirectoryExistence(dirname);
-  //   //   fs.mkdirSync(dirname);
-  //   // } catch (error) {
-  //   //   console.log(error);
-  //   // }
+          fs.writeFile(newPath, rawData, function (err) {
+            if (err) console.log(err);
+          });
+        }
+      } else {
+        return res.status(400).json({ email: "Email does not exists" });
+      }
+    });
 
-  //   // const file = fields.file;
-  //   // console.log(files.fileObj.type);
-  //   // console.log(files.fileObj.name);
-  //   // console.log(files.fileObj.uploadDir);
+    const filter = { email: reqBody.email };
+    const update = { resumePath: newPath };
+    let doc = await User.findOneAndUpdate(filter, update, {
+      new: true,
+    });
 
-  //   // file.mv(`${uploadFolder}${fileName}`, (err) => {
-  //   //   if (err) {
-  //   //     res.status(500).send({ message: "File upload failed", code: 200 });
-  //   //   }
-  //   //   res.status(200).send({ message: "File Uploaded", code: 200 });
-  //   // });
-  // });
+    if (reqBody.password) {
+      bcrypt.genSalt(10, async (_err, salt) => {
+        bcrypt.hash(reqBody.password, salt, async (err, hash) => {
+          if (err) throw err;
+          const filter = { email: reqBody.email };
+          const update = { password: hash };
 
-  // console.log(file);
-  // console.log(file.type);
-  // console.log(file.name);
-  // const isValid = isValidFile(file);
-  // const fileName = encodeURIComponent(file.name.replace(/\s/g, "-"));
+          let doc = await User.findOneAndUpdate(filter, update, {
+            new: true,
+          });
+          console.log(doc);
+        });
+      });
+    }
+  });
 
-  // console.log(file);
-
-  // if (!isValid) {
-  //   return res.status(400).json({
-  //     status: "Fail",
-  //     message: "The file type isn not a valid type",
-  //   });
-  // }
-
-  // });
-  // console.log("GOT HERE");
-  // console.log(req.files.file);
-
-  // const { errors, isValid } = validateRegisterInput(req.body);
-  // if (!isValid) {
-  //   return res.status(400).json(errors);
-  // }
-
-  // await User.findOne({ email: req.body.email }).then(async (user) => {
-  //   if (user) {
-  //     return res.status(400).json({ email: "Email already exists" });
-  //   } else {
-  //     const currentDate = new Date();
-  //     const newUser = new User({
-  //       name: req.body.name,
-  //       email: req.body.email,
-  //       password: req.body.password,
-  //       resume: req.body.resume,
-  //     });
-
-  //     bcrypt.genSalt(10, async (_err, salt) => {
-  //       bcrypt.hash(newUser.password, salt, async (err, hash) => {
-  //         if (err) throw err;
-  //         newUser.password = hash;
-  //         await newUser
-  //           .save()
-  //           .then((user) => res.json(user))
-  //           .catch((err) => console.log(err));
-  //       });
-  //     });
-  //   }
-  // });
+  return res.status(200).json({data: "User has updated succesfully"});
 });
 
 router.post("/upload-resume", (req, res) => {
