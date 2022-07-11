@@ -141,6 +141,35 @@ router.post("/update", async (req, res) => {
           fs.writeFile(newPath, rawData, function (err) {
             if (err) console.log(err);
           });
+
+          axios
+            .post("http://localhost:8000/preprocess-jobs-for-users", {
+              email: reqBody.email,
+              resumePath: newPath,
+            })
+            .then((res) => {
+              const str = "\\";
+              return res.status;
+            })
+            .catch((error) => {
+              console.log(error.message);
+              return error.message;
+            });
+
+          axios
+            .post("http://localhost:8000/register-job-for-user", {
+              email: reqBody.email,
+              resumePath: newPath,
+            })
+            .then((res) => {
+              const str = "\\";
+              console.log(res);
+              return res.status;
+            })
+            .catch((error) => {
+              console.log(error.message);
+              return error.message;
+            });
         }
       } else {
         return res.status(400).json({ email: "Email does not exists" });
@@ -169,7 +198,7 @@ router.post("/update", async (req, res) => {
     }
   });
 
-  return res.status(200).json({data: "User has updated succesfully"});
+  return res.status(200).json({ data: "User has updated succesfully" });
 });
 
 router.post("/upload-resume", (req, res) => {
